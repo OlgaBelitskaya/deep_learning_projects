@@ -9,4 +9,4 @@
 - [Project](https://olgabelitskaya.github.io/DL_PP1.html)
 - [Solutions](https://olgabelitskaya.github.io/DL_PP1_Solutions.html)
 
-#### P2: Image Generation
+#### P2: Multi-Label Classification
