@@ -19,3 +19,6 @@
 #### P3: Parts of Speech
 
 #### P4: Style Recognition
+- [Project](https://olgabelitskaya.github.io/DL_PP4.html)
+- [Solutions](https://olgabelitskaya.github.io/DL_PP4_Solutions.html)
+- [Dataset](https://www.kaggle.com/olgabelitskaya/style-color-images)
