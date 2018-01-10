@@ -1,0 +1,18 @@
+Christian Louboutin,0 
+Chanel,1, 
+Dolce & Gabbana,2 
+Gucci,3 
+Christian Dior,4
+Versace,5
+Yves Saint Laurent,6
+
+shoes,0 
+lipstick,1 
+handbag,2
+nail polish,3
+necklace,4
+watches,5
+ring,6
+bracelet,7
+boots,8
+earrings,9
