@@ -19,6 +19,9 @@
 - [Addition. Attempt to separate the main images from the backgrounds](https://olgabelitskaya.github.io/DL_PP2_Additional.html)
 
 #### P3: Parts of Speech
+- Project
+- Dataset
+- Solutions
 
 #### P4: Style Recognition
 - [Project](https://olgabelitskaya.github.io/DL_PP4.html)
@@ -26,3 +29,8 @@
 - [Solutions](https://olgabelitskaya.github.io/DL_PP4_Solutions.html)
 
 #### P5: Decor Colorization
+- Project
+- [Dataset](https://www.kaggle.com/olgabelitskaya/traditional-decor-patterns)
+- [Solutions](https://olgabelitskaya.github.io/DL_PP5_Solutions.html)
+- [Addition. Mixed Styles. Version 1](https://olgabelitskaya.github.io/DL_PP5_Additional.html)
+- [Addition. Mixed Styles. Version 2](https://olgabelitskaya.github.io/DL_PP5_Additional_V2.html)
