@@ -34,3 +34,5 @@
 - [Solutions](https://olgabelitskaya.github.io/DL_PP5_Solutions.html)
 - [Addition. Mixed Styles. Version 1](https://olgabelitskaya.github.io/DL_PP5_Additional.html)
 - [Addition. Mixed Styles. Version 2](https://olgabelitskaya.github.io/DL_PP5_Additional_V2.html)
+- [Colab Notebook #1. Decor Classification](https://drive.google.com/open?id=1Tt3qZePsf2P6kNNao-hQ58DlG71Abj5a)
+- [Colab Notebook #2. Decor Colorization](https://drive.google.com/open?id=1Is0ll753U0dlR2RhQVwelaegRFhkvoxw)
