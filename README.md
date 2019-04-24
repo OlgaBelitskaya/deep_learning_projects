@@ -23,8 +23,6 @@ Colaboratory Notebooks &nbsp; [decor_classification.ipynb &#x1F4D6; ](https://dr
 
 - Classification of Handwritten Letters &nbsp; [Kaggle Dataset &#x1F4D6;](https://www.kaggle.com/olgabelitskaya/classification-of-handwritten-letters)
 
-- Handwritten Letters 2 &nbsp; [Kaggle Dataset &#x1F4D6;](https://www.kaggle.com/olgabelitskaya/handwritten-letters-2)
-
 - Style Color Images &nbsp; [Kaggle Dataset &#x1F4D6;](https://www.kaggle.com/olgabelitskaya/style-color-images)
 
 - Traditional Decor Patterns &nbsp; [Kaggle Dataset &#x1F4D6;](https://www.kaggle.com/olgabelitskaya/traditional-decor-patterns)
