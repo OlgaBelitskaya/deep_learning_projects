@@ -2,10 +2,12 @@
 ## Practice Projects
 
 #### P0: Image Classification &nbsp; [Project &#x1F310;](https://olgabelitskaya.github.io/DL_PP0.html)  &nbsp; [Solutions &#x1F310;](https://olgabelitskaya.github.io/DL_PP0_Solutions.html)
-Colaboratory Notebooks  &nbsp; [flower_classification.ipynb &#x1F4D6; ](https://drive.google.com/open?id=1H2ArWH_1kYfkIoCbxleX-aHAozRVBAdB)
+Colaboratory Notebooks  &nbsp; [flower_classification.ipynb &#x1F4D6; ](https://drive.google.com/open?id=1H2ArWH_1kYfkIoCbxleX-aHAozRVBAdB)<br/>
+Interactive Report with SageMathCell &nbsp; [P0: Image Classification 🌀](https://olgabelitskaya.github.io/DL_PP0_Solutions_SMC.html)
 
 #### P1: Neural Networks for Regression &nbsp; [Project &#x1F310;](https://olgabelitskaya.github.io/DL_PP1.html) &nbsp; [Solutions &#x1F310;](https://olgabelitskaya.github.io/DL_PP1_Solutions.html)
-Colaboratory Notebooks  &nbsp; [boston_regression.ipynb &#x1F4D6; ](https://drive.google.com/open?id=1atPu92jNJ-qBsFpbOiMojHGXCu6gJWYW)
+Colaboratory Notebooks  &nbsp; [boston_regression.ipynb &#x1F4D6; ](https://drive.google.com/open?id=1atPu92jNJ-qBsFpbOiMojHGXCu6gJWYW)<br/>
+Interactive Report with SageMathCell &nbsp; [P1: Neural Networks for Regression 🌀](https://olgabelitskaya.github.io/DL_PP1_Solutions_SMC.html)
 
 #### P2: Multi-Label Classification &nbsp; [Project &#x1F310;](https://olgabelitskaya.github.io/DL_PP2.html) &nbsp; [Solutions &#x1F310;](https://olgabelitskaya.github.io/DL_PP2_Solutions.html) &nbsp; [Solutions Variant 2 &#x1F310;](https://olgabelitskaya.github.io/DL_PP2_Solutions_V2.html) &nbsp; [Addition &#x1F310;](https://olgabelitskaya.github.io/DL_PP2_Additional.html)
 Colaboratory Notebooks  &nbsp; [letter_recognition.ipynb &#x1F4D6; ](https://drive.google.com/open?id=1Z9Fz0OOi6bpWvH-H2OhExC9CkGPWBYZz) &nbsp; [letter_generator.ipynb &#x1F4D6; ](https://drive.google.com/open?id=19B40eERSKfVO5zsizehxPOLdhLs5YcUT)
