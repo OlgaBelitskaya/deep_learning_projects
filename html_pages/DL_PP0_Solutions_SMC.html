@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>🏙DLPP0SMC</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>$(function (){
+    sagecell.makeSagecell({inputLocation:'div.linked',linked:true,
+                           evalButtonText:'Run Linked Cells'}); });
+    </script>
+  </head>
+  <style>
+  @import url('https://fonts.googleapis.com/css?family=Akronim|Lobster');
+  h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  p,a,table {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  .sagecell .CodeMirror-scroll {min-height:3em; max-height:60em;}
+  body {margin:5px 5px 5px 15px;}
+  </style>  
+  <body>
+    <h1>📑 &nbsp; Deep Learning. P0: Image Classification</h1>
+<a href="https://olgabelitskaya.github.io/README.html">&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a> 
+<a href="https://colab.research.google.com/drive/1H2ArWH_1kYfkIoCbxleX-aHAozRVBAdB">
+&#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a> 
+<a href="https://www.instagram.com/olga.belitskaya/">&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href="https://www.pinterest.ru/olga_belitskaya/code-style/">&#x1F300; &nbsp; Pinterest Posts</a><br/>
+In this project, we'll classify images from the 
+<a href="https://www.kaggle.com/olgabelitskaya/flower-color-images">Flower Color Images Dataset.</a><br/>
+The content is very simple:<br/> 
+210 images (128x128x3) with 10 species of flowering plants 
+stored in the file <i>FlowerColorImages.h5.zip</i>.<br/>
+In the original dataset, photo files are in the .png format and the labels are integers.<br/>
+<div class="linked"><script type="text/x-sage">
+%%html
+<table style="width:30%; background-color:silver; 
+              font-family:'Lobster'; font-size:150%;">
+<tr><th>Label </th><th> Flower Name </th></tr>
+<tr><td style="color:#FF355E;"><center> 0 </center></td>
+<td style="color:#FF355E;"><left> => phlox </left></td></tr>
+<tr><td style="color:#FF6037;"><center> 1 </center></td>
+<td style="color:#FF6037;"><left> => rose </left></td></tr>
+<tr><td style="color:#FF9966;"><center> 2 </center></td>
+<td style="color:#FF9966;"><left> => calendula </left></td></tr>
+<tr><td style="color:#FFCC33;"><center> 3 </center></td>
+<td style="color:#FFCC33;"><left> => iris </left></td></tr> 
+<tr><td style="color:#FFFF66;"><center> 4 </center></td>
+<td style="color:#FFFF66;"><left> => max chrysanthemum </left></td></tr>
+<tr><td style="color:#CCFF00;"><center> 5 </center></td>
+<td style="color:#CCFF00;"><left> => bellflower </left></td></tr>
+<tr><td style="color:#66FF66;"><center> 6 </center></td>
+<td style="color:#66FF66;"><left> => viola </left></td></tr>
+<tr><td style="color:#50BFE6;"><center> 7 </center></td>
+<td style="color:#50BFE6;"><left> => rudbeckia laciniata </left></td></tr>
+<tr><td style="color:#FF6EFF;"><center> 8 </center></td>
+<td style="color:#FF6EFF;"><left> => peony </left></td></tr>
+<tr><td style="color:#FF00CC;"><center> 9 </center></td>
+<td style="color:#FF00CC;"><left> => aquilegia </left></td></tr>
+</table>
+</script></div><br/>
+We'll preprocess the images, then train a neural network on all the samples.<br/> 
+The images need to be normalized and the labels need to be one-hot encoded.<br/>
+We are going to apply 
+<a href="https://keras.io/">Keras: The Python Deep Learning library.</a><br/>
+At the end, we'll get to see the neural network's predictions on the sample images.<br/>
+    <h2>✒️ &nbsp;Step 0. Import Libraries</h2>      
+<div class="linked"><script type="text/x-sage">
+#unlock to install modules
+#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+spath='/home/sc_work/.sage/local/lib/python3.7/site-packages'
+import sys; sys.path.append(spath)
+import pandas as pd,numpy as np,pylab as pl
+import tensorflow as tf
+import zipfile,h5py,urllib
+import warnings; warnings.filterwarnings('ignore')
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import Sequential,load_model
+from tensorflow.keras.layers import Conv2D,Dense,Dropout
+from tensorflow.keras.layers import Activation,LeakyReLU
+from tensorflow.keras.layers import MaxPooling2D,GlobalMaxPooling2D
+</script></div><br/>      
+    <h2>✒️ &nbsp;Step 1. Load and Explore the Data</h2> 
+<div class="linked"><script type="text/x-sage">
+path='https://olgabelitskaya.github.io/'
+zf='FlowerColorImages.h5.zip'
+input_file=urllib.request.urlopen(path+zf)
+output_file=open(zf,'wb'); 
+output_file.write(input_file.read())
+output_file.close(); input_file.close()
+zipf=zipfile.ZipFile(zf,'r')
+zipf.extractall(''); zipf.close()
+f=h5py.File(zf[:-4],'r'); keys=list(f.keys())
+images=np.array(f[keys[0]])
+labels=np.array(f[keys[1]])
+names=['phlox','rose','calendula','iris',
+       'max chrysanthemum','bellflower','viola',
+       'rudbeckia laciniata','peony','aquilegia']
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+st1='<p>Images => array shape: %s</p>'
+st2='<p>Labels => array shape: %s</p>'
+pretty_print(html(st1%str(images.shape)))
+pretty_print(html(st2%str(labels.shape)))
+fig=pl.figure(figsize=(6,4))
+n=randint(1,30)
+for i in range(n,n+6):
+    ax=fig.add_subplot(2,3,i-n+1,\
+    xticks=[],yticks=[],title=names[labels[i]])
+    ax.imshow((images[i]/255))
+pl.show()
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 2. Save and Load the Data</h2>      
+<div class="linked"><script type="text/x-sage">
+images_csv=images.reshape(210,128*128*3)
+np.savetxt("flower_images.csv",images_csv,
+           fmt='%i',delimiter=",")
+np.savetxt("flower_labels.csv",labels,
+           fmt='%i',delimiter=",")
+images=pd.read_csv("flower_images.csv",header=None)
+labels=pd.read_csv("flower_labels.csv",header=None)
+display(images.iloc[:int(10),:int(10)])
+display(labels.iloc[:int(20)].T)
+images=images.values; labels=labels.values
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 3. Implement Preprocess Functions</h2>
+<div class="linked"><script type="text/x-sage">
+images=images.reshape(-1,128,128,3)/255
+labels=to_categorical(labels,10)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+x_train,x_test,y_train,y_test=\
+train_test_split(images,labels,test_size=.1,random_state=1)
+m=int(len(x_test)/2)
+x_valid,y_valid=x_test[:m],y_test[:m]
+x_test,y_test=x_test[m:],y_test[m:]
+del images,labels
+[x_train.shape,x_test.shape,x_valid.shape,
+y_train.shape,y_test.shape,y_valid.shape]
+</script></div><br/>      
+<div class="linked"><script type="text/x-sage">
+st='<p>Label: '+names[np.argmax(y_train[n])]+'</p>'
+pretty_print(html(st)); pl.figure(figsize=(3,2))
+pl.imshow((x_train[n])); pl.show()
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 4. Define the Model</h2>
+<div class="linked"><script type="text/x-sage">
+i1,i2,i3,i5,i8=int(1),int(2),int(3),int(5),int(8)
+i10,i12,i32,i256=int(10),int(12),int(32),int(256)
+def model():
+    dr=float(.25)
+    model=Sequential()
+    model.add(Conv2D(i32,(i3,i3),padding='same', 
+                     input_shape=x_train.shape[i1:]))
+    model.add(Activation('relu'))    
+    model.add(MaxPooling2D(pool_size=(i2,i2)))
+    model.add(Dropout(dr))
+    model.add(GlobalMaxPooling2D())    
+    model.add(Dense(i256,activation='tanh'))
+    model.add(Dropout(dr))      
+    model.add(Dense(i10))
+    model.add(Activation('softmax'))
+    model.compile(loss='categorical_crossentropy', 
+                  optimizer='nadam',metrics=['accuracy'])    
+    return model
+model=model()
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 5. Train the Model</h2>
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath='weights.flower.hdf5', 
+                             verbose=i2,save_best_only=True)
+history=model.fit(x_train,y_train,batch_size=i8,
+                  epochs=i12,verbose=i2,
+                  validation_data=(x_valid,y_valid),
+                  callbacks=[checkpointer])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def history_plot(fit_history):
+    pl.figure(figsize=(6,9));pl.subplot(211)
+    pl.plot(fit_history.history['loss'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_loss'],
+            color='#348ABD',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Loss")
+    pl.legend(); pl.grid()
+    pl.title('Loss Function')      
+    pl.subplot(212)
+    pl.plot(fit_history.history['acc'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_acc'], 
+            color='#348ABD',label='valid')
+    pl.xlabel('Epochs'); pl.ylabel('Accuracy')    
+    pl.legend(); pl.title('Accuracy')
+    pl.grid(); pl.show()
+history_plot(history)
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 6. Evaluate and Save the Model</h2>
+<div class="linked"><script type="text/x-sage">
+model.load_weights('weights.flower.hdf5')
+#model.save('model.h5')
+#model=load_model('model.h5')
+model.evaluate(x_test,y_test)
+</script></div><br/>
+    <h2>✒️ &nbsp;Step 7. Display Predictions</h2>
+<div class="linked"><script type="text/x-sage">
+y_test_predict=model.predict_classes(x_test)
+fig=pl.figure(figsize=(6,4))
+randch=np.random.choice(x_test.shape[0],size=6,replace=False)
+for i,idx in enumerate(randch):
+    ax=fig.add_subplot(2,3,i+1,xticks=[],yticks=[])
+    ax.imshow(np.squeeze(x_test[idx]))
+    pred_idx=y_test_predict[idx]
+    true_idx=np.argmax(y_test[idx])
+    ax.set_title("{} ({})".format(names[pred_idx],names[true_idx]),
+                 color=("#4876ff" if pred_idx==true_idx else "darkred"))
+pl.show()
+</script></div><br/>
+  </body>
+</html>

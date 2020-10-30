@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>🏙DLPP22SMC</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>$(function (){
+    sagecell.makeSagecell({inputLocation:'div.linked',linked:true,
+                           evalButtonText:'Run Linked Cells'}); });
+    </script>
+  </head>
+  <style>
+  @import url('https://fonts.googleapis.com/css?family=Akronim|Lobster');
+  h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  p,a {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  .sagecell .CodeMirror-scroll {min-height:3em; max-height:38em;}
+  body {margin:5px 5px 5px 15px;}
+  </style>  
+  <body>
+    <h1>📑 &nbsp; Deep Learning. P2: Letter Recognition. Keras Applications</h1>
+<a href="https://olgabelitskaya.github.io/README.html">&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a> 
+<a href="https://drive.google.com/file/d/1Z9Fz0OOi6bpWvH-H2OhExC9CkGPWBYZz">
+&#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a>
+<a href="https://www.instagram.com/olga.belitskaya/">&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href="https://www.pinterest.ru/olga_belitskaya/code-style/">&#x1F300; &nbsp; Pinterest Posts</a><br/>
+For this project, I have created the dataset of <br/>
+14190 color images (32x32x3) with 33 handwritten Russian letters.<br/>
+There are four types of letter backgrounds here. <br/>
+They are labeled in this dataset as well.<br/>
+<div class="linked"><script type="text/x-sage">
+import urllib,os; from IPython import display
+fpath='https://olgabelitskaya.github.io/images/'
+lf=['03_16.jpeg','08_50.jpeg','11_216.jpeg','20_415.jpeg']
+for f in lf:
+    input_file=urllib.request.urlopen(fpath+f)
+    output_file=open(f,'wb')
+    output_file.write(input_file.read())
+    output_file.close(); input_file.close()
+fpath2='https://sagecell.sagemath.org/kernel/'
+fpath2+=os.getcwd()[14:]+'/files/'
+display.HTML("""
+<style>
+@import url('https://fonts.googleapis.com/css?family=Akronim|Ewert');
+</style>
+<table style='width:30%; background-color:ghostwhite; 
+              font-family:Ewert; font-size:200%;'>
+<tr style='font-family:Akronim;'><th><center>Background</center></th>
+<th><center>Image</center></th></tr>
+<tr><td><center>0</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[0]+""" alt='bg0'>
+</center></td></tr>
+<tr><td><center>1</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[1]+""" alt='bg1'>
+</center></td></tr>
+<tr><td><center>2</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[2]+""" alt='bg2'>
+</center></td></tr>
+<tr><td><center>3</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[3]+""" alt='bg3'>
+</center></td></tr>
+</table>""")
+</script></div><br/>
+    <h2>✒️&nbsp;Step 0. Importing Libraries and Defining Helpful Functions</h2>      
+<div class="linked"><script type="text/x-sage">
+#unlock to install modules
+#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
+spath='/home/sc_work/.sage/local/lib/python3.7/site-packages'
+import sys; sys.path.append(spath)
+import warnings; warnings.filterwarnings('ignore')
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+import h5py,urllib,zipfile,tensorflow as tf
+import pandas as pd,numpy as np,pylab as pl
+from skimage.transform import resize
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from tensorflow.keras.callbacks import \
+ModelCheckpoint,EarlyStopping,ReduceLROnPlateau
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential,load_model,Model
+from tensorflow.keras.layers import \
+Input,Activation,Dense,LSTM,Flatten,Dropout,BatchNormalization,\
+Conv2D,MaxPooling2D,GlobalAveragePooling2D,GlobalMaxPooling2D,\
+PReLU,LeakyReLU
+i0,i1,i2,i3,i4,i5,i8=\
+int(0),int(1),int(2),int(3),int(4),int(5),int(8)
+fw='weights.letter.hdf5'
+n1,n2=int(1500),int(150)
+np.set_printoptions(precision=6)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def ohe(x): 
+    return OneHotEncoder(categories='auto')\
+           .fit(x.reshape(-i1,i1))\
+           .transform(x.reshape(-i1,i1))\
+           .toarray().astype('int64')
+def tts(X,y): 
+    x_train,x_test,y_train,y_test=\
+    train_test_split(X,y,test_size=float(.2),
+                     random_state=i1)
+    n=int(len(x_test)/2)
+    x_valid,y_valid=x_test[:n],y_test[:n]
+    x_test,y_test=x_test[n:],y_test[n:]
+    return x_train,x_valid,x_test,y_train,y_valid,y_test
+</script></div><br/> 
+<div class="linked"><script type="text/x-sage">
+def history_plot(fit_history):
+    pl.figure(figsize=(10,10))
+    pl.subplot(211)
+    pl.plot(fit_history.history['loss'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_loss'],
+            color='#348ABD',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Loss")
+    pl.legend(); pl.grid()
+    pl.title('Loss Function')     
+    pl.subplot(212)
+    pl.plot(fit_history.history['acc'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_acc'],
+            color='#348ABD',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Accuracy")    
+    pl.legend(); pl.grid()
+    pl.title('Accuracy'); pl.show()
+</script></div><br/> 
+    <h2>✒️&nbsp;Step 1. Loading and Preprocessing the Data</h2>       
+<div class="linked"><script type="text/x-sage">
+fpath='https://olgabelitskaya.github.io/'
+zf='LetterColorImages_123.h5.zip'
+input_file=urllib.request.urlopen(fpath+zf)
+output_file=open(zf,'wb')
+output_file.write(input_file.read())
+output_file.close(); input_file.close()
+zipf=zipfile.ZipFile(zf,'r')
+zipf.extractall(''); zipf.close()
+f=h5py.File(zf[:-4],'r')
+keys=list(f.keys())
+letters=u'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+backgrounds=np.array(f[keys[0]])
+images=np.array(f[keys[1]])/255
+labels=np.array(f[keys[2]])
+clabels=ohe(labels)
+pl.figure(figsize=(2,3)); il=10**4
+pl.title('Label: %s \n'%letters[labels[il]-1]+\
+         'Background: %s'%backgrounds[il],
+         fontsize=18)
+pl.imshow(images[il]); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+x_train1,x_valid1,x_test1,\
+y_train1,y_valid1,y_test1=tts(images,clabels)
+x_train1,x_valid1,x_test1,\
+y_train1,y_valid1,y_test1=\
+x_train1[:n1],x_valid1[:n2],x_test1[:n2],\
+y_train1[:n1],y_valid1[:n2],y_test1[:n2]
+sh=[el.shape for el in \
+[x_train1,y_train1,x_valid1,y_valid1,x_test1,y_test1]]
+del f,keys,images,labels,backgrounds,clabels
+pd.DataFrame(sh)
+</script></div><br/>
+      <h2>✒️ &nbsp; Step 2. Keras Applications</h2>
+Unfortunately, we can train with guarantee only one neural network at ones.<br/>
+Please restart the page and load the data again for training each of them.<br/>
+<p>VGG16</p>
+<div class="linked"><script type="text/x-sage">
+from tensorflow.keras.applications.vgg16 import VGG16
+vgg16bmodel=VGG16(weights='imagenet',include_top=False)
+pvx_train1=vgg16bmodel.predict(x_train1)
+pvx_valid1=vgg16bmodel.predict(x_valid1)
+pvx_test1=vgg16bmodel.predict(x_test1)
+pvx_train1=pvx_train1.reshape(-1,1,1,pvx_train1.shape[3])
+pvx_valid1=pvx_valid1.reshape(-1,1,1,pvx_valid1.shape[3])
+pvx_test1=pvx_test1.reshape(-1,1,1,pvx_test1.shape[3])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+sh=pvx_train1.shape[1:]
+def vgg16model():
+    model=Sequential()  
+    model.add(GlobalAveragePooling2D(input_shape=sh))   
+    model.add(Dense(int(2048)))
+    model.add(LeakyReLU(alpha=float(.02)))
+    model.add(Dropout(float(.25)))        
+    model.add(Dense(int(256)))
+    model.add(LeakyReLU(alpha=float(.02)))
+    model.add(Dropout(float(.25)))   
+    model.add(Dense(int(33),activation='softmax'))    
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='nadam',metrics=['accuracy'])
+    return model
+vgg16model=vgg16model()
+</script></div><br/>  
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i2,save_best_only=True)
+lr_reduction=ReduceLROnPlateau(monitor='val_loss',patience=i5,
+                               verbose=i2,factor=float(.8))
+history=vgg16model.fit(pvx_train1,y_train1, 
+                       validation_data=(pvx_valid1,y_valid1), 
+                       epochs=int(16),batch_size=int(128),verbose=i2, 
+                       callbacks=[checkpointer,lr_reduction])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+history_plot(history)
+vgg16model.load_weights(fw)
+vgg16model.evaluate(pvx_test1,y_test1)
+</script></div><br/> 
+<p>VGG19</p>
+<div class="linked"><script type="text/x-sage">
+from tensorflow.keras.applications.vgg19 import VGG19
+vgg19bmodel=VGG19(weights='imagenet',include_top=False)
+n1,n2=1100,110
+x_train1,x_valid1,x_test1,\
+y_train1,y_valid1,y_test1=\
+x_train1[:n1],x_valid1[:n2],x_test1[:n2],\
+y_train1[:n1],y_valid1[:n2],y_test1[:n2]
+pvx_train1=vgg19bmodel.predict(x_train1)
+pvx_valid1=vgg19bmodel.predict(x_valid1)
+pvx_test1=vgg19bmodel.predict(x_test1)
+pvx_train1=pvx_train1.reshape(-1,1,1,pvx_train1.shape[3])
+pvx_valid1=pvx_valid1.reshape(-1,1,1,pvx_valid1.shape[3])
+pvx_test1=pvx_test1.reshape(-1,1,1,pvx_test1.shape[3])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+sh=pvx_train1.shape[1:]
+def vgg19model():
+    model=Sequential()  
+    model.add(GlobalAveragePooling2D(input_shape=sh))   
+    model.add(Dense(int(1024)))
+    model.add(LeakyReLU(alpha=float(.02)))
+    model.add(Dropout(float(.25))) 
+    model.add(Dense(int(256)))
+    model.add(LeakyReLU(alpha=float(.02)))
+    model.add(Dropout(float(.25)))
+    model.add(Dense(int(33),activation='softmax'))    
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',metrics=['accuracy'])
+    return model
+vgg19model=vgg19model()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i2,save_best_only=True)
+history=vgg19model.fit(pvx_train1,y_train1, 
+                       validation_data=(pvx_valid1,y_valid1), 
+                       epochs=int(16),batch_size=int(128),verbose=i2, 
+                       callbacks=[checkpointer])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+history_plot(history)
+vgg19model.load_weights(fw)
+vgg19model.evaluate(pvx_test1,y_test1)
+</script></div><br/>
+  </body>
+</html>      

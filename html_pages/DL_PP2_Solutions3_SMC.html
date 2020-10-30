@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>🏙DLPP23SMC</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>$(function (){
+    sagecell.makeSagecell({inputLocation:'div.linked',linked:true,
+                           evalButtonText:'Run Linked Cells'}); });
+    </script>
+  </head>
+  <style>
+  @import url('https://fonts.googleapis.com/css?family=Akronim|Lobster');
+  h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  p,a {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  .sagecell .CodeMirror-scroll {min-height:3em; max-height:30em;}
+  body {margin:5px 5px 5px 15px;}
+  </style>  
+  <body>
+    <h1>📑 &nbsp; Deep Learning. P2: Letter Generation</h1>
+<a href="https://olgabelitskaya.github.io/README.html">&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a> 
+<a href="https://colab.research.google.com/drive/19B40eERSKfVO5zsizehxPOLdhLs5YcUT">
+&#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a>
+<a href="https://www.instagram.com/olga.belitskaya/">&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href="https://www.pinterest.ru/olga_belitskaya/code-style/">&#x1F300; &nbsp; Pinterest Posts</a><br/>
+For this project, I have created the dataset of <br/>
+14190 color images (32x32x3) with 33 handwritten Russian letters.<br/>
+There are four types of letter backgrounds here. <br/>
+They are labeled in this dataset as well.<br/>
+    <h2>✒️&nbsp;Step 0. Importing Libraries and Defining Helpful Functions</h2>      
+<div class="linked"><script type="text/x-sage">
+#unlock to install modules
+#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
+spath='/home/sc_work/.sage/local/lib/python3.7/site-packages'
+import sys; sys.path.append(spath)
+import warnings; warnings.filterwarnings('ignore')
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+import h5py,urllib,zipfile,tensorflow as tf
+import numpy as np,pylab as pl
+from skimage.transform import resize
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.callbacks import \
+ModelCheckpoint,ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam,Nadam
+from tensorflow.keras.models import Sequential,load_model,Model
+from tensorflow.keras.layers import \
+Input,Activation,Dense,LSTM,\
+Flatten,Dropout,BatchNormalization,\
+Conv2D,MaxPooling2D,GlobalMaxPooling2D,\
+GlobalAveragePooling2D,PReLU,LeakyReLU
+i0,i1,i2,i3,i4,i5,i6,i7,i8=\
+int(0),int(1),int(2),int(3),int(4),int(5),int(6),int(7),int(8)
+i24,i32,i128,i255,i576,i1024=\
+int(24),int(32),int(128),int(255),int(576),int(1024)
+np.set_printoptions(precision=8); il=10**2
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def preprocess(x):    
+    x=(x-.5)*2
+    return np.clip(x,-i1,i1)
+def deprocess(x):
+    x=(x/2+.5)*255
+    x=np.clip(x,i0,i255)
+    x=np.uint8(x)
+    return x.reshape(i24,i24)
+def latent_samples(n_samples,sample_size):
+    return np.random.normal(loc=i0,scale=i1,
+                            size=(n_samples,sample_size))
+latent_sample576=latent_samples(i1,i576)
+latent_sample128=latent_samples(i1,i128)
+def display_images(generated_images):
+    n_images=len(generated_images)
+    rows=i4; cols=n_images//rows    
+    pl.figure(figsize=(cols,rows))
+    for i in range(n_images):
+        img=deprocess(generated_images[i])
+        pl.subplot(rows,cols,i+i1)
+        pl.imshow(img,cmap=pl.cm.Greys)
+        pl.xticks([]); pl.yticks([])
+    pl.tight_layout(); pl.show()
+</script></div><br/> 
+    <h2>✒️&nbsp;Step 1. Loading and Preprocessing the Data</h2>       
+<div class="linked"><script type="text/x-sage">
+fpath='https://olgabelitskaya.github.io/'
+zf='LetterColorImages2.h5.zip'
+input_file=urllib.request.urlopen(fpath+zf)
+output_file=open(zf,'wb')
+output_file.write(input_file.read())
+output_file.close(); input_file.close()
+zipf=zipfile.ZipFile(zf,'r')
+zipf.extractall(''); zipf.close()
+f=h5py.File(zf[:-4],'r')
+keys=list(f.keys())
+letters=u'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+images=np.array(f[keys[1]])/255
+labels=np.array(f[keys[2]])
+pl.figure(figsize=(2,3))
+pl.title('Label: %s \n'%letters[labels[il]-i1],
+         fontsize=18)
+pl.imshow(images[il]); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+gray_images=np.dot(images[...,:3],[.299,.587,.114])
+N=int(5000); gray_images=gray_images[:N]
+gray_images=np.array([resize(el,(i24,i24,i1)) 
+                      for el in gray_images])
+gray_images=gray_images.reshape(-i1,i24*i24)
+pl.figure(figsize=(2,3))
+pl.title('Label: %s \n'%letters[labels[il]-i1],fontsize=18)
+img=np.array(gray_images[il].reshape(i24,i24))
+pl.imshow(img.astype(float),
+          cmap=pl.cm.Greys); pl.show()
+del images
+gray_images.shape,gray_images.dtype
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+pl.figure(figsize=(2,3))
+img0=np.squeeze(latent_sample576).reshape(i24,i24)
+pl.imshow(img0,cmap=pl.cm.Greys); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+X_train_real,X_test_real=\
+train_test_split(gray_images,test_size=.1)
+X_train_real=preprocess(X_train_real)
+X_test_real=preprocess(X_test_real)
+display_images(X_train_real[:i24])
+del gray_images
+X_train_real.shape,X_test_real.shape
+</script></div><br/>
+      <h2>✒️ &nbsp; Keras GAN</h2>
+<a href="https://github.com/naokishibuya/deep-learning/blob/master/python/gan_mnist.ipynb">
+&#x1F300; &nbsp; "Using GAN for Generating Hand-written Digit Images" by Naoki Shibuya</a><br/>
+A Simple Example<br/>
+<div class="linked"><script type="text/x-sage">
+discriminator=Sequential([Dense(i128,input_shape=(i576,)),
+                          LeakyReLU(alpha=.01),
+                          Dense(i1),Activation('sigmoid')], 
+                         name='discriminator')
+discriminator.summary()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+fig=pl.figure(figsize=(4,3))
+ax=fig.add_subplot(121)
+img=X_train_real[il].reshape(i1,i576)
+ax.set_title(discriminator.predict(img))
+ax.imshow(img.reshape(i24,i24),cmap=pl.cm.Greys)
+ax=fig.add_subplot(122)
+ax.set_title(discriminator.predict(img0.reshape(i1,i576)))
+ax.imshow(img0,cmap=pl.cm.Greys); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+generator=Sequential([Dense(i1024,input_shape=(i128,)),
+                      LeakyReLU(alpha=.01),
+                      Dense(i576),Activation('tanh')], 
+                     name='generator')
+generator.summary()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+pl.figure(figsize=(2,3))
+generated_latent_sample=generator.predict(latent_sample128)
+pl.title(discriminator.predict(generated_latent_sample))
+pl.imshow(generated_latent_sample.reshape(i24,i24),
+           cmap=pl.cm.Greys); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+gan=Sequential([generator,discriminator])
+gan.summary()
+</script></div><br/>
+Build a GAN Model<br/>
+<div class="linked"><script type="text/x-sage">
+def trainable(model,trainable):
+    for layer in model.layers:
+        layer.trainable=trainable
+def simple_GAN(sample_size, 
+               g_hidden_size, 
+               d_hidden_size, 
+               leaky_alpha, 
+               g_learning_rate,
+               d_learning_rate):    
+    tf.keras.backend.clear_session()    
+    generator=Sequential([Dense(g_hidden_size,input_shape=(sample_size,)),
+                          LeakyReLU(alpha=leaky_alpha),
+                          Dense(i576), Activation('tanh')], 
+                         name='generator')    
+    discriminator=Sequential([Dense(d_hidden_size,input_shape=(i576,)),
+                              LeakyReLU(alpha=leaky_alpha),
+                              Dense(i1),Activation('sigmoid')], 
+                             name='discriminator')        
+    gan=Sequential([generator,discriminator])    
+    discriminator.compile(optimizer=Adam(lr=d_learning_rate), 
+                          loss='binary_crossentropy')
+    gan.compile(optimizer=Adam(lr=g_learning_rate), 
+                loss='binary_crossentropy')   
+    return gan,generator,discriminator
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+sample_size    =i128     
+g_hidden_size  =i576  # generator
+d_hidden_size  =i128   # discriminator
+leaky_alpha    =float(.02)
+g_learning_rate=float(.0001) # generator
+d_learning_rate=float(.0002)  # discriminator
+epochs         =int(30)
+batch_size     =int(64)      
+valid_size     =int(16)     
+smooth         =float(.1)
+def real_fake_labels(size):
+    return np.ones([size,i1]),np.zeros([size,i1])
+y_real5,y_fake5=real_fake_labels(5)
+print('Real\n',y_real5,'\nFake\n',y_fake5)
+y_train_real,y_train_fake=real_fake_labels(batch_size)
+y_valid_real,y_valid_fake=real_fake_labels(valid_size)
+gan,generator,discriminator=\
+simple_GAN(sample_size,g_hidden_size,d_hidden_size,
+           leaky_alpha,g_learning_rate,d_learning_rate)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+losses=[]
+for e in range(epochs):
+    for i in range(len(X_train_real)//batch_size):
+        # real images
+        X_batch_real=X_train_real[i*batch_size:(i+1)*batch_size]        
+        # latent samples and generated letter images
+        batch_latent_samples=latent_samples(batch_size,sample_size)
+        X_batch_fake=generator.predict_on_batch(batch_latent_samples)        
+        # train the discriminator to detect real and fake images
+        trainable(discriminator,True)
+        discriminator.train_on_batch(X_batch_real,y_train_real*(1.-smooth))
+        discriminator.train_on_batch(X_batch_fake,y_train_fake)
+        # train the generator via GAN
+        trainable(discriminator,False)
+        gan.train_on_batch(batch_latent_samples,y_train_real)    
+    # evaluate
+    X_valid_real=X_test_real[np.random.choice(len(X_test_real), 
+                                              valid_size,replace=False)]    
+    valid_latent_samples=latent_samples(valid_size,sample_size)
+    X_valid_fake=generator.predict_on_batch(valid_latent_samples)
+    d_loss=discriminator.test_on_batch(X_valid_real,y_valid_real)
+    d_loss+=discriminator.test_on_batch(X_valid_fake,y_valid_fake)
+    g_loss=gan.test_on_batch(valid_latent_samples,y_valid_real)     
+    losses.append((d_loss,g_loss))
+    st="Epoch: %d/%d | Discriminator Loss: %.4f | "+\
+       "Generator Loss: %.4f | DL > GL: %s"
+    if (e+i1)%int(5)==i0:
+        print(st%((e+i1,epochs,d_loss,g_loss,d_loss>g_loss)))
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+latent_examples=latent_samples(i24,sample_size)
+generated_letters=generator.predict(latent_examples)
+display_images(generated_letters)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def display_loss(losses,n):
+    indices=[i*n for i in range(len(losses)//n)]
+    n_losses=np.array(losses)[indices,:]    
+    pl.figure(figsize=(12,6))
+    pl.plot(n_losses.T[i0],'-o',c='#37c9e1',lw=i1,
+            label='Discriminator')
+    pl.plot(n_losses.T[1],'-o',c='#39d4be',lw=i1,
+            label='Generator')
+    pl.title("Training Loss Functions")
+    pl.legend(); pl.show()
+display_loss(losses,i3)
+</script></div><br/>
+  </body>
+</html>      

@@ -1,0 +1,381 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>🏙DLPP2SMC</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>$(function (){
+    sagecell.makeSagecell({inputLocation:'div.linked',linked:true,
+                           evalButtonText:'Run Linked Cells'}); });
+    </script>
+  </head>
+  <style>
+  @import url('https://fonts.googleapis.com/css?family=Akronim|Lobster');
+  h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  p,a {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+  .sagecell .CodeMirror-scroll {min-height:3em; max-height:30em;}
+  body {margin:5px 5px 5px 15px;}
+  </style>  
+  <body>
+    <h1>📑 &nbsp; Deep Learning. P2: Multi-Label Classification. Letter Recognition</h1>
+<a href="https://olgabelitskaya.github.io/README.html">&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a> 
+<a href="https://drive.google.com/file/d/1Z9Fz0OOi6bpWvH-H2OhExC9CkGPWBYZz">
+&#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a>
+<a href="https://www.instagram.com/olga.belitskaya/">&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href="https://www.pinterest.ru/olga_belitskaya/code-style/">&#x1F300; &nbsp; Pinterest Posts</a><br/>
+For this project, I have created the dataset of <br/>
+14190 color images (32x32x3) with 33 handwritten Russian letters.<br/>
+There are four types of letter backgrounds here. <br/>
+They are labeled in this dataset as well.<br/>
+<div class="linked"><script type="text/x-sage">
+import urllib,os; from IPython import display
+fpath='https://olgabelitskaya.github.io/images/'
+lf=['03_16.jpeg','08_50.jpeg','11_216.jpeg','20_415.jpeg']
+for f in lf:
+    input_file=urllib.request.urlopen(fpath+f)
+    output_file=open(f,'wb')
+    output_file.write(input_file.read())
+    output_file.close(); input_file.close()
+fpath2='https://sagecell.sagemath.org/kernel/'
+fpath2+=os.getcwd()[14:]+'/files/'
+display.HTML("""
+<style>
+@import url('https://fonts.googleapis.com/css?family=Akronim|Ewert');
+</style>
+<table style='width:30%; background-color:ghostwhite; 
+              font-family:Ewert; font-size:200%;'>
+<tr style='font-family:Akronim;'><th><center>Background</center></th>
+<th><center>Image</center></th></tr>
+<tr><td><center>0</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[0]+""" alt='bg0'>
+</center></td></tr>
+<tr><td><center>1</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[1]+""" alt='bg1'>
+</center></td></tr>
+<tr><td><center>2</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[2]+""" alt='bg2'>
+</center></td></tr>
+<tr><td><center>3</center></td><td><center>
+<img width='50' height='50' src="""+fpath2+lf[3]+""" alt='bg3'>
+</center></td></tr>
+</table>""")
+</script></div><br/>
+    <h2>✒️&nbsp;Step 0. Importing Libraries and Defining Helpful Functions</h2>      
+<div class="linked"><script type="text/x-sage">
+#unlock to install modules
+#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
+spath='/home/sc_work/.sage/local/lib/python3.7/site-packages'
+import sys; sys.path.append(spath)
+import warnings; warnings.filterwarnings('ignore')
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+import h5py,urllib,zipfile,tensorflow as tf
+import pandas as pd,numpy as np,pylab as pl
+from skimage.transform import resize
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from tensorflow.keras.callbacks import \
+ModelCheckpoint,EarlyStopping,ReduceLROnPlateau
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential,load_model,Model
+from tensorflow.keras.layers import \
+Input,Activation,Dense,LSTM,\
+Flatten,Dropout,BatchNormalization,\
+Conv2D,MaxPooling2D,GlobalMaxPooling2D,PReLU,LeakyReLU
+i0,i1,i2,i3,i4,i5,i8=\
+int(0),int(1),int(2),int(3),int(4),int(5),int(8)
+np.set_printoptions(precision=6)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def ohe(x): 
+    return OneHotEncoder(categories='auto')\
+           .fit(x.reshape(-i1,i1))\
+           .transform(x.reshape(-i1,i1))\
+           .toarray().astype('int64')
+def tts(X,y): 
+    x_train,x_test,y_train,y_test=\
+    train_test_split(X,y,test_size=float(.2),
+                     random_state=i1)
+    n=int(len(x_test)/2)
+    x_valid,y_valid=x_test[:n],y_test[:n]
+    x_test,y_test=x_test[n:],y_test[n:]
+    return x_train,x_valid,x_test,y_train,y_valid,y_test
+def resh(x):
+    y=[resize(el,(int(8),int(8),int(3)),
+              anti_aliasing=True) for el in x]
+    return np.array(y)
+def resh2(x): 
+    y=[resize(el,(int(8),int(8),int(1)),
+              anti_aliasing=True) for el in x]
+    return np.array(y)
+</script></div><br/> 
+<div class="linked"><script type="text/x-sage">
+def history_plot(fit_history):
+    pl.figure(figsize=(10,10))
+    pl.subplot(211)
+    pl.plot(fit_history.history['loss'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_loss'],
+            color='#348ABD',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Loss")
+    pl.legend(); pl.grid()
+    pl.title('Loss Function')     
+    pl.subplot(212)
+    pl.plot(fit_history.history['acc'],
+            color='slategray',label='train')
+    pl.plot(fit_history.history['val_acc'],
+            color='#348ABD',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Accuracy")    
+    pl.legend(); pl.grid()
+    pl.title('Accuracy'); pl.show()
+</script></div><br/> 
+    <h2>✒️&nbsp;Step 1. Loading and Preprocessing the Data</h2>       
+<div class="linked"><script type="text/x-sage">
+fpath='https://olgabelitskaya.github.io/'
+zf='LetterColorImages_123.h5.zip'
+input_file=urllib.request.urlopen(fpath+zf)
+output_file=open(zf,'wb')
+output_file.write(input_file.read())
+output_file.close(); input_file.close()
+zipf=zipfile.ZipFile(zf,'r')
+zipf.extractall(''); zipf.close()
+f=h5py.File(zf[:-4],'r')
+keys=list(f.keys())
+letters=u'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+backgrounds=np.array(f[keys[0]])
+images=np.array(f[keys[1]])/255
+labels=np.array(f[keys[2]])
+pl.figure(figsize=(2,3)); il=10**4
+pl.title('Label: %s \n'%letters[labels[il]-1]+\
+         'Background: %s'%backgrounds[il],
+         fontsize=18)
+pl.imshow(images[il]); pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+gray_images=np.dot(images[...,:3],[.299,.587,.114])
+pl.figure(figsize=(2,3))
+pl.title('Label: %s \n'%letters[labels[il]-1]+\
+         'Background: %s'%backgrounds[il],
+         fontsize=18)
+pl.imshow(gray_images[il],cmap=pl.cm.bone)
+pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+cbackgrounds,clabels=ohe(backgrounds),ohe(labels)
+pd.DataFrame([labels[97:103],clabels[97:103]]).T
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+ctargets=np.concatenate((clabels,cbackgrounds),axis=1)
+pd.DataFrame([clabels.shape,cbackgrounds.shape,ctargets.shape])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+x_train1,x_valid1,x_test1,\
+y_train1,y_valid1,y_test1=tts(images,clabels)
+x_train2,x_valid2,x_test2,\
+y_train2,y_valid2,y_test2=tts(gray_images,clabels)
+x_train3,x_valid3,x_test3,\
+y_train3,y_valid3,y_test3=tts(images,ctargets)
+x_train4,x_valid4,x_test4,\
+y_train4,y_valid4,y_test4=tts(gray_images,ctargets)
+x_train1,x_valid1,x_test1=\
+resh(x_train1),resh(x_valid1),resh(x_test1)
+x_train3,x_valid3,x_test3=\
+resh(x_train3),resh(x_valid3),resh(x_test3)
+x_train2,x_valid2,x_test2=\
+resh2(x_train2),resh2(x_valid2),resh2(x_test2)
+x_train4,x_valid4,x_test4=\
+resh2(x_train4),resh2(x_valid4),resh2(x_test4)
+sh=[el.shape for el in \
+[x_train1,y_train1,x_valid1,y_valid1,x_test1,y_test1,
+ x_train2,y_train2,x_valid2,y_valid2,x_test2,y_test2,
+ x_train3,y_train3,x_valid3,y_valid3,x_test3,y_test3,
+ x_train4,y_train4,x_valid4,y_valid4,x_test4,y_test4]]
+pd.DataFrame(sh)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+del images,gray_images,labels,backgrounds
+del clabels,cbackgrounds,ctargets
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+fw='weights.letter.hdf5'
+dr,fr,al=float(.2),float(.2),float(.02)
+i10,i16,i32,i33=int(10),int(16),int(32),int(33)
+i48,i64,i96=int(48),int(64),int(96)
+i100,i128,i196,i200=int(100),int(128),int(196),int(200)
+i256,i512,i1024=int(256),int(512),int(1024)
+n1,n2=int(3000),int(500)
+</script></div><br/>
+      <h2>✒️ &nbsp; Step 2. One-Label Classification Models</h2>
+<p>Color Images</p>
+<div class="linked"><script type="text/x-sage">
+def model():
+    model=Sequential()
+    model.add(Conv2D(i16,(i3,i3),padding='same',
+                     input_shape=x_train1.shape[i1:]))
+    model.add(LeakyReLU(alpha=al))   
+    model.add(MaxPooling2D(pool_size=(i2,i2)))
+    model.add(Dropout(dr))
+    model.add(Conv2D(i48,(i3,i3)))
+    model.add(LeakyReLU(alpha=al))  
+    model.add(MaxPooling2D(pool_size=(i2,i2)))
+    model.add(Dropout(dr))
+    model.add(GlobalMaxPooling2D())  
+    model.add(Dense(i256))
+    model.add(LeakyReLU(alpha=al))
+    model.add(Dropout(2*dr))     
+    model.add(Dense(i33,activation='softmax'))
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',metrics=['accuracy'])   
+    return model
+model=model()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i0,
+                             save_best_only=True)
+lr_reduction=ReduceLROnPlateau(monitor='val_loss',patience=i5,
+                               verbose=i0,factor=fr)
+history=model.fit(x_train1[:n1],y_train1[:n1],epochs=i16,
+                  batch_size=i64,verbose=i2,
+                  validation_data=(x_valid1[:n2],y_valid1[:n2]),
+                  callbacks=[checkpointer,lr_reduction])
+</script></div><br/>  
+<div class="linked"><script type="text/x-sage">
+history_plot(history)
+model.load_weights(fw)
+print(model.evaluate(x_test1[:n2],y_test1[:n2]))
+del x_train1,x_valid1,x_test1,\
+    y_train1,y_valid1,y_test1
+</script></div><br/>
+<p>Grayscale Images</p><br/>
+<div class="linked"><script type="text/x-sage">
+def gray_model():
+    model=Sequential()    
+    model.add(Conv2D(i16,(i3,i3),padding='same', 
+                     input_shape=x_train2.shape[i1:]))
+    model.add(Activation('relu'))    
+    model.add(MaxPooling2D(pool_size=(i2,i2)))
+    model.add(Dropout(dr))
+    model.add(Conv2D(i48,(i3,i3)))
+    model.add(Activation('relu'))    
+    model.add(MaxPooling2D(pool_size=(i2,i2)))
+    model.add(Dropout(dr))   
+    model.add(GlobalMaxPooling2D())    
+    model.add(Dense(i256,activation='relu'))
+    model.add(Dropout(dr))        
+    model.add(Dense(i33,activation='softmax'))   
+    model.compile(loss='categorical_crossentropy', 
+                  optimizer='rmsprop',metrics=['accuracy'])
+    return model
+gray_model=gray_model() 
+</script></div><br/> 
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i0,
+                             save_best_only=True)
+lr_reduction=ReduceLROnPlateau(monitor='val_loss',patience=i5,
+                               verbose=i0,factor=fr)
+history=gray_model.fit(x_train2[:n1],y_train2[:n1],epochs=i16,
+                       batch_size=i64,verbose=i2,
+                       validation_data=(x_valid2[:n2],y_valid2[:n2]),
+                       callbacks=[checkpointer,lr_reduction])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+history_plot(history)
+gray_model.load_weights(fw)
+print(gray_model.evaluate(x_test2[:n2],y_test2[:n2]))
+del x_train2,x_valid2,x_test2,\
+    y_train2,y_valid2,y_test2
+</script></div><br/>
+      <h2>✒️ &nbsp; Step 3. Multi-Label Classification Models</h2>      
+<div class="linked"><script type="text/x-sage">
+def multi_model():    
+    model_input=Input(shape=(i8,i8,i3))
+    x=BatchNormalization()(model_input)
+    x=Conv2D(i32,(i3,i3),padding='same')(model_input)
+    x=LeakyReLU(alpha=al)(x)
+    x=MaxPooling2D(pool_size=(i2,i2))(x)    
+    x=Dropout(dr)(x)   
+    x=Conv2D(i96,(i3,i3),padding='same')(x)
+    x=LeakyReLU(alpha=al)(x)
+    x=MaxPooling2D(pool_size=(i2,i2))(x)    
+    x=Dropout(dr)(x)             
+    x=GlobalMaxPooling2D()(x)   
+    x=Dense(i512)(x)
+    x=LeakyReLU(alpha=al)(x)
+    x=Dropout(dr)(x)   
+    x=Dense(i128)(x)  
+    x=LeakyReLU(alpha=al)(x)
+    x=Dropout(dr)(x)    
+    y1=Dense(i33,activation='softmax')(x)
+    y2=Dense(i4,activation='softmax')(x)    
+    model=Model(inputs=model_input,outputs=[y1,y2])
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='nadam',metrics=['accuracy'])
+    return model
+multi_model=multi_model()
+multi_model.summary()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i0,
+                             save_best_only=True)
+lr_reduction=ReduceLROnPlateau(monitor='val_loss',patience=i5,
+                               verbose=i0,factor=fr)
+history=multi_model.fit(x_train3[:n1],
+                        [y_train3[:n1,:i33],y_train3[:n1,i33:]],
+                        epochs=i16,batch_size=i64,verbose=i2,
+                        validation_data=(x_valid3[:n2],
+                                         [y_valid3[:n2,:i33],
+                                          y_valid3[:n2,i33:]]),
+                        callbacks=[checkpointer,lr_reduction])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+print(multi_model.evaluate(x_test3[:n2],\
+[y_test3[:n2,:i33],y_test3[:n2,i33:]]))
+del x_train3,x_valid3,x_test3,\
+    y_train3,y_valid3,y_test3
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def gray_multi_model():    
+    model_input=Input(shape=(i8,i8,i1))
+    x=BatchNormalization()(model_input)
+    x=Conv2D(i16,(i3,i3),padding='same')(model_input)
+    x=LeakyReLU(alpha=al)(x)
+    x=MaxPooling2D(pool_size=(i2,i2))(x)    
+    x=Dropout(dr)(x)   
+    x=Conv2D(i48,(i3,i3),padding='same')(x) 
+    x=LeakyReLU(alpha=al)(x)
+    x=MaxPooling2D(pool_size=(i2,i2))(x)    
+    x=Dropout(dr)(x)             
+    x=GlobalMaxPooling2D()(x)    
+    x=Dense(i512)(x) 
+    x=LeakyReLU(alpha=al)(x)
+    x=Dropout(dr)(x)     
+    y1=Dense(i33,activation='softmax')(x)
+    y2=Dense(i4,activation='softmax')(x)      
+    model=Model(inputs=model_input,outputs=[y1,y2])
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='rmsprop',metrics=['accuracy'])      
+    return model
+gray_multi_model=gray_multi_model()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+checkpointer=ModelCheckpoint(filepath=fw,verbose=i0,
+                             save_best_only=True)
+lr_reduction=ReduceLROnPlateau(monitor='val_loss',patience=i5,
+                               verbose=i0,factor=fr)
+history=gray_multi_model.fit(x_train4[:n1],
+                             [y_train4[:n1,:i33],y_train4[:n1,i33:]], 
+                             validation_data=(x_valid4[:n2],
+                                              [y_valid4[:n2,:i33],
+                                               y_valid4[:n2,i33:]],), 
+                             epochs=i16,batch_size=i128,verbose=i2, 
+                             callbacks=[checkpointer,lr_reduction])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+gray_multi_model.evaluate(x_test4[:n2],\
+[y_test4[:n2,:i33],y_test4[:n2,i33:]])
+</script></div><br/>
+  </body>
+</html>      
