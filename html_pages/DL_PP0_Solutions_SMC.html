@@ -64,16 +64,20 @@ We are going to apply
 At the end, we'll get to see the neural network's predictions on the sample images.<br/>
     <h2>✒️ &nbsp;Step 0. Import Libraries</h2>      
 <div class="linked"><script type="text/x-sage">
-#unlock to install modules
-#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
-</script></div><br/>
-<div class="linked"><script type="text/x-sage">
-spath='/home/sc_work/.sage/local/lib/python3.7/site-packages'
-import sys; sys.path.append(spath)
+!python3 -m pip install --upgrade pip \
+--user --quiet --no-warn-script-location
+!python3 -m pip install argon2-cffi \
+--user --quiet --no-warn-script-location
+!python3 -m pip install --ignore-installed --upgrade tensorflow==2.3.0 \
+--user --quiet --no-warn-script-location
+!python3 -m pip install h5py==2.10.0 \
+--user --quiet --no-warn-script-location
+path='/home/sc_work/.sage/local/lib/python3.8/site-packages'
+import sys; sys.path.append(path)
+import warnings; warnings.filterwarnings('ignore')
 import pandas as pd,numpy as np,pylab as pl
 import tensorflow as tf
 import zipfile,h5py,urllib
-import warnings; warnings.filterwarnings('ignore')
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -93,8 +97,8 @@ output_file.close(); input_file.close()
 zipf=zipfile.ZipFile(zf,'r')
 zipf.extractall(''); zipf.close()
 f=h5py.File(zf[:-4],'r'); keys=list(f.keys())
-images=np.array(f[keys[0]])
-labels=np.array(f[keys[1]])
+images=np.array(f[keys[0]],dtype=np.int16)
+labels=np.array(f[keys[1]],dtype=np.int16)
 names=['phlox','rose','calendula','iris',
        'max chrysanthemum','bellflower','viola',
        'rudbeckia laciniata','peony','aquilegia']
@@ -107,20 +111,18 @@ pretty_print(html(st2%str(labels.shape)))
 fig=pl.figure(figsize=(6,4))
 n=randint(1,30)
 for i in range(n,n+6):
-    ax=fig.add_subplot(2,3,i-n+1,\
-    xticks=[],yticks=[],title=names[labels[i]])
+    ax=fig.add_subplot(2,3,i-n+1,xticks=[],yticks=[])
+    ax.set_title(names[labels[i]],color='#348ABD')
     ax.imshow((images[i]/255))
-pl.show()
+pl.tight_layout(); pl.show()
 </script></div><br/>
     <h2>✒️ &nbsp;Step 2. Save and Load the Data</h2>      
 <div class="linked"><script type="text/x-sage">
 images_csv=images.reshape(210,128*128*3)
-np.savetxt("flower_images.csv",images_csv,
-           fmt='%i',delimiter=",")
-np.savetxt("flower_labels.csv",labels,
-           fmt='%i',delimiter=",")
-images=pd.read_csv("flower_images.csv",header=None)
-labels=pd.read_csv("flower_labels.csv",header=None)
+np.savetxt('flower_images.csv',images_csv,fmt='%i',delimiter=',')
+np.savetxt('flower_labels.csv',labels,fmt='%i',delimiter=',')
+images=pd.read_csv('flower_images.csv',header=None)
+labels=pd.read_csv('flower_labels.csv',header=None)
 display(images.iloc[:int(10),:int(10)])
 display(labels.iloc[:int(20)].T)
 images=images.values; labels=labels.values
@@ -129,8 +131,6 @@ images=images.values; labels=labels.values
 <div class="linked"><script type="text/x-sage">
 images=images.reshape(-1,128,128,3)/255
 labels=to_categorical(labels,10)
-</script></div><br/>
-<div class="linked"><script type="text/x-sage">
 x_train,x_test,y_train,y_test=\
 train_test_split(images,labels,test_size=.1,random_state=1)
 m=int(len(x_test)/2)
@@ -148,10 +148,9 @@ pl.imshow((x_train[n])); pl.show()
     <h2>✒️ &nbsp;Step 4. Define the Model</h2>
 <div class="linked"><script type="text/x-sage">
 i1,i2,i3,i5,i8=int(1),int(2),int(3),int(5),int(8)
-i10,i12,i32,i256=int(10),int(12),int(32),int(256)
+i10,i16,i32,i256=int(10),int(16),int(32),int(256)
 def model():
-    dr=float(.25)
-    model=Sequential()
+    model=Sequential(); dr=float(.25)
     model.add(Conv2D(i32,(i3,i3),padding='same', 
                      input_shape=x_train.shape[i1:]))
     model.add(Activation('relu'))    
@@ -169,36 +168,33 @@ model=model()
 </script></div><br/>
     <h2>✒️ &nbsp;Step 5. Train the Model</h2>
 <div class="linked"><script type="text/x-sage">
-checkpointer=ModelCheckpoint(filepath='weights.flower.hdf5', 
-                             verbose=i2,save_best_only=True)
-history=model.fit(x_train,y_train,batch_size=i8,
-                  epochs=i12,verbose=i2,
-                  validation_data=(x_valid,y_valid),
-                  callbacks=[checkpointer])
+checkpointer=ModelCheckpoint(
+    filepath='/tmp/checkpoint',verbose=i2,save_weights_only=True,
+    monitor='val_accuracy',mode='max',save_best_only=True)
+history=model.fit(
+    x_train,y_train,batch_size=i16,epochs=i16,verbose=i2,
+    validation_data=(x_valid,y_valid),callbacks=[checkpointer])
 </script></div><br/>
 <div class="linked"><script type="text/x-sage">
-def history_plot(fit_history):
-    pl.figure(figsize=(6,9));pl.subplot(211)
-    pl.plot(fit_history.history['loss'],
-            color='slategray',label='train')
-    pl.plot(fit_history.history['val_loss'],
-            color='#348ABD',label='valid')
-    pl.xlabel("Epochs"); pl.ylabel("Loss")
-    pl.legend(); pl.grid()
-    pl.title('Loss Function')      
-    pl.subplot(212)
-    pl.plot(fit_history.history['acc'],
-            color='slategray',label='train')
-    pl.plot(fit_history.history['val_acc'], 
-            color='#348ABD',label='valid')
-    pl.xlabel('Epochs'); pl.ylabel('Accuracy')    
-    pl.legend(); pl.title('Accuracy')
+def keras_history_plot(fit_history,fig_size,color):
+    keys=list(fit_history.history.keys())
+    list_history=[fit_history.history[keys[i]] 
+                  for i in range(len(keys))]
+    dfkeys=pd.DataFrame(list_history).T
+    dfkeys.columns=keys
+    fig=pl.figure(figsize=(fig_size,fig_size))
+    ax1=fig.add_subplot(2,1,1)
+    dfkeys.iloc[:,[int(0),int(2)]].plot(
+        ax=ax1,color=['slategray',color])
+    pl.grid(); ax2=fig.add_subplot(2,1,2)
+    dfkeys.iloc[:,[int(1),int(3)]].plot(
+        ax=ax2,color=['slategray',color])
     pl.grid(); pl.show()
-history_plot(history)
+keras_history_plot(history,7,'#348ABD')
 </script></div><br/>
     <h2>✒️ &nbsp;Step 6. Evaluate and Save the Model</h2>
 <div class="linked"><script type="text/x-sage">
-model.load_weights('weights.flower.hdf5')
+model.load_weights('/tmp/checkpoint')
 #model.save('model.h5')
 #model=load_model('model.h5')
 model.evaluate(x_test,y_test)
@@ -206,16 +202,16 @@ model.evaluate(x_test,y_test)
     <h2>✒️ &nbsp;Step 7. Display Predictions</h2>
 <div class="linked"><script type="text/x-sage">
 y_test_predict=model.predict_classes(x_test)
-fig=pl.figure(figsize=(6,4))
+fig=pl.figure(figsize=(8,4))
 randch=np.random.choice(x_test.shape[0],size=6,replace=False)
 for i,idx in enumerate(randch):
     ax=fig.add_subplot(2,3,i+1,xticks=[],yticks=[])
     ax.imshow(np.squeeze(x_test[idx]))
     pred_idx=y_test_predict[idx]
     true_idx=np.argmax(y_test[idx])
-    ax.set_title("{} ({})".format(names[pred_idx],names[true_idx]),
-                 color=("#4876ff" if pred_idx==true_idx else "darkred"))
-pl.show()
+    ax.set_title('{} ({})'.format(names[pred_idx],names[true_idx]),
+                 color=('#348ABD' if pred_idx==true_idx else 'darkorange'))
+pl.tight_layout(); pl.show()
 </script></div><br/>
   </body>
 </html>
