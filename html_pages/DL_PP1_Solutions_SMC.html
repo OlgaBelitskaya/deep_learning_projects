@@ -201,13 +201,13 @@ pl.tight_layout(); pl.show()
     <h2>✒️&nbsp;Step 2. Build Neural Networks with Keras Py</h2>
 <p>Multilayer Perceptron (MLP)</p><br/>
 <div class='linked'><script type='text/x-sage'>
-i0,i1,i2,i10,i13,i104,i1024=\
-int(0),int(1),int(2),int(10),int(13),int(104),int(1024)
+i0,i1,i2,i10,i13,i104=\
+int(0),int(1),int(2),int(10),int(13),int(104)
 def mlp_model():
     model=Sequential() 
-    model.add(Dense(i1024,input_dim=i13))
+    model.add(Dense(i104,input_dim=i13))
     model.add(LeakyReLU(alpha=float(.025)))   
-    model.add(Dense(i104))     
+    model.add(Dense(i13))     
     model.add(LeakyReLU(alpha=float(.025)))   
     model.add(Dense(i1,kernel_initializer='normal'))    
     model.compile(loss='mse',optimizer='rmsprop',metrics=['mae'])
@@ -215,7 +215,7 @@ def mlp_model():
 mlp_model=mlp_model()
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
-epochs=int(200); batch_size=int(14)
+epochs=int(300); batch_size=int(14)
 mlp_checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
     monitor='val_loss',mode='max',save_best_only=True)
@@ -304,7 +304,7 @@ def rnn_model():
 rnn_model=rnn_model()  
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
-epochs=int(200); batch_size=int(14)
+epochs=int(100); batch_size=int(14)
 rnn_checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
     monitor='val_loss',mode='max',save_best_only=True)
