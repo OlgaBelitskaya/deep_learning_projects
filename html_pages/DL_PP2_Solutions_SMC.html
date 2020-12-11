@@ -290,7 +290,7 @@ multi_model.summary()
 <div class='linked'><script type='text/x-sage'>
 checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
-    monitor='val_accuracy',mode='max',save_best_only=True)
+    monitor='val_loss',mode='min',save_best_only=True)
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=multi_model.fit(
@@ -301,6 +301,7 @@ history=multi_model.fit(
     callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+multi_model.load_weights('/tmp/checkpoint')
 print(multi_model.evaluate(x_test3[:n2],\
 [y_test3[:n2,:i33],y_test3[:n2,i33:]],verbose=i0))
 del x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3
@@ -332,7 +333,7 @@ gray_multi_model=gray_multi_model()
 <div class='linked'><script type='text/x-sage'>
 checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
-    monitor='val_accuracy',mode='max',save_best_only=True)
+    monitor='val_loss',mode='min',save_best_only=True)
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=gray_multi_model.fit(
@@ -343,6 +344,7 @@ history=gray_multi_model.fit(
                      callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+gray_multi_model.load_weights('/tmp/checkpoint')
 pd.DataFrame(gray_multi_model.evaluate(x_test4[:n2],\
 [y_test4[:n2,:i33],y_test4[:n2,i33:]],verbose=i0))
 </script></div><br/>
