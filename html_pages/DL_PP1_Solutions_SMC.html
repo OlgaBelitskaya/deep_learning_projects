@@ -218,7 +218,7 @@ mlp_model=mlp_model()
 epochs=int(300); batch_size=int(14)
 mlp_checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
-    monitor='val_loss',mode='max',save_best_only=True)
+    monitor='val_loss',mode='min',save_best_only=True)
 mlp_lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i10,verbose=i0,factor=float(.75))
 mlp_history=mlp_model.fit(
@@ -267,7 +267,7 @@ cnn_model=cnn_model()
 epochs=int(200); batch_size=int(14)
 cnn_checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
-    monitor='val_loss',mode='max',save_best_only=True)
+    monitor='val_loss',mode='min',save_best_only=True)
 cnn_lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i10,verbose=i0,factor=float(.75))
 cnn_history=cnn_model.fit(
@@ -307,7 +307,7 @@ rnn_model=rnn_model()
 epochs=int(100); batch_size=int(14)
 rnn_checkpointer=ModelCheckpoint(
     filepath='/tmp/checkpoint',verbose=i0,save_weights_only=True,
-    monitor='val_loss',mode='max',save_best_only=True)
+    monitor='val_loss',mode='min',save_best_only=True)
 rnn_lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i10,verbose=i0,factor=float(.75))
 rnn_history=rnn_model.fit(
