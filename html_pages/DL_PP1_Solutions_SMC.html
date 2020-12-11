@@ -111,24 +111,20 @@ pl.style.use('seaborn-whitegrid')
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
 def history_plot(fit_history):
-    pl.figure(figsize=(10,10)); pl.subplot(211)
+    pl.figure(figsize=(9,9)); pl.subplot(211)
     keys=list(fit_history.history.keys())[0:4]
-    pl.plot(fit_history.history[keys[0]],
-            color='slategray',label='Train')
-    pl.plot(fit_history.history[keys[2]],
-            color='#348ABD',label='Valid')
+    pl.plot(fit_history.history[keys[0]],color='slategray',label='Train')
+    pl.plot(fit_history.history[keys[2]],color='#348ABD',label='Valid')
     pl.xlabel('Epochs'); pl.ylabel('Loss')
-    pl.legend(); pl.grid(); pl.title('Loss Function')     
+    pl.legend(); pl.grid(True); pl.title('Loss Function')     
     pl.subplot(212)
-    pl.plot(fit_history.history[keys[1]],
-            color='slategray',label='Train')
-    pl.plot(fit_history.history[keys[3]],
-            color='#348ABD',label='Valid')
+    pl.plot(fit_history.history[keys[1]],color='slategray',label='Train')
+    pl.plot(fit_history.history[keys[3]],color='#348ABD',label='Valid')
     pl.xlabel('Epochs'); pl.ylabel('MAE')    
-    pl.legend(); pl.grid(); pl.title('Mean Absolute Error')
+    pl.legend(); pl.grid(True); pl.title('Mean Absolute Error')
     pl.tight_layout(); pl.show()
 def predict_plot(y1,y2,y3,ti):
-    pl.figure(figsize=(10,6))
+    pl.figure(figsize=(9,6))
     pl.scatter(range(n),y_test[:n],marker='*',s=100,
                color='black',label='Real Data')
     pl.plot(y1[:n],label='MLP')
