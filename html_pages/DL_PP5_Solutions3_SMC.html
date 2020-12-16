@@ -51,7 +51,7 @@ from tqdm import tqdm
 i0,i1,i2,i3=int(0),int(1),int(2),int(3)
 files_path='https://olgabelitskaya.github.io/'
 </script></div><br/>
-    <h2>✒️ &nbsp; Displaying Horizontal Images</h2> 
+    <h2>✒️ &nbsp; Displaying Images</h2> 
 <div class='linked'><script type='text/x-sage'>
 def display_images(original,style,files_path=files_path):
     for f in [original,style]:
@@ -61,7 +61,7 @@ def display_images(original,style,files_path=files_path):
         output_file.close(); input_file.close()
     original_img=cv2.imread(original)
     style_img=cv2.imread(style)    
-    fig=pl.figure(figsize=(8,4))
+    fig=pl.figure(figsize=(6,3))
     ax=fig.add_subplot(121)
     str1='Shape of the original image: %s'
     pl.title(str1%str(original_img.shape),fontsize=int(8))
@@ -72,19 +72,7 @@ def display_images(original,style,files_path=files_path):
     ax.imshow(cv2.cvtColor(style_img,cv2.COLOR_BGR2RGB))
     pl.tight_layout(); pl.show()
 </script></div><br/>
-<div class='linked'><script type='text/x-sage'>
-display_images('picture09.png','pattern09.png')
-</script></div><br/>
-    <h2>✒️ &nbsp; Preprocessing</h2> 
-<div class='linked'><script type='text/x-sage'>
-picture01=cv2.imread('picture09.png').astype('float32')
-pattern01=cv2.imread('pattern09.png').astype('float32')
-picture01=cv2.resize(picture01,(int(350),int(330)))
-pattern01=cv2.resize(pattern01,(int(350),int(330)))
-picture01=picture01.astype('float32')
-pattern01=pattern01.astype('float32')
-picture01.shape,pattern01.shape
-</script></div><br/>
+    <h2>✒️ &nbsp; Preprocessing & Calculating</h2> 
 <div class='linked'><script type='text/x-sage'>
 def preprocess(img):
     img=img.copy(); img=np.expand_dims(img,axis=i0) 
@@ -173,25 +161,39 @@ def train_run(pars):
             _,gradients_value=calculate([generated_data])
             generated_data-=gradients_value*.001
 </script></div><br/>
-    <h2>✒️ &nbsp; Generated Images</h2>       
+<p>Unfortunately, we can train with guarantee only one neural network at ones.</p>
+<p>Please restart the page and load the data again for training each of them.</p>
+    <h2>✒️ &nbsp; Horizontal Images</h2> 
+<div class='linked'><script type='text/x-sage'>
+display_images('picture09.png','pattern09.png')
+</script></div><br/>
+<div class='linked'><script type='text/x-sage'>
+picture01=cv2.imread('picture09.png').astype('float32')
+pattern01=cv2.imread('pattern09.png').astype('float32')
+picture01=cv2.resize(picture01,(int(350),int(330)))
+pattern01=cv2.resize(pattern01,(int(350),int(330)))
+picture01=picture01.astype('float32')
+pattern01=pattern01.astype('float32')
+picture01.shape,pattern01.shape
+</script></div><br/>
+    <h2>✒️ &nbsp; Generated Images</h2>
 <div class='linked'><script type='text/x-sage'>
 %train_run 3 .7 .7 .7
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
 generated_image01=deprocess(generated_data)
-pl.figure(figsize=(6,4))
+pl.figure(figsize=(5,3))
 ti=[['coefficients','loss functions & steps'],
     [round(ol,2),'original_loss'],[round(sl,2),'style_loss'],
     [round(vl,2),'variation_loss'],[epochs,'epochs']]
 pl.imshow(cv2.cvtColor(generated_image01,cv2.COLOR_BGR2RGB))
 pl.tight_layout(); pl.show(); table(ti)
 </script></div><br/>
-    <h2>✒️ &nbsp; Displaying Vertical Images</h2> 
+    <h2>✒️ &nbsp; Vertical Images</h2> 
 <div class='linked'><script type='text/x-sage'>
 display_images('picture01.png','pattern01.png')
 </script></div><br/>
-    <h2>✒️ &nbsp; Preprocessing</h2> 
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 def rr_img(image,angle,width,height):
     [h,w]=image.shape[:i2]; x,y=int(w//2),int(h//2)
     M=cv2.getRotationMatrix2D((x,y),-angle,float(1.))
@@ -201,54 +203,28 @@ def rr_img(image,angle,width,height):
     img=cv2.warpAffine(image,M,(nw,nh))
     return cv2.resize(img,(width,height)).astype('float32')
 </script></div><br/>  
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 picture01=cv2.imread('picture01.png').astype('float32')
 pattern01=cv2.imread('pattern01.png').astype('float32')
 picture01=rr_img(picture01,int(90),int(350),int(300))
 pattern01=rr_img(pattern01,int(90),int(350),int(300))
 picture01=picture01.astype('float32')
 pattern01=pattern01.astype('float32')
-fig=pl.figure(figsize=(6,3))
-ax=fig.add_subplot(121)
-pl.title("Shape of the original image: %s"%str(picture01.shape),
-         fontsize=int(8))
-ax.imshow(cv2.cvtColor(picture01/255,cv2.COLOR_BGR2RGB))
-ax=fig.add_subplot(122)
-pl.title("Shape of the style image: %s"%str(pattern01.shape),
-         fontsize=int(8))
-ax.imshow(cv2.cvtColor(pattern01/255,cv2.COLOR_BGR2RGB)); pl.show()
+picture01.shape,pattern01.shape
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
-original_input,style_input,generated_input=\
-inputs(picture01,pattern01)
-input_tensor=tf.concat([original_input,style_input,
-                        generated_input],axis=i0)
-vgg16_model=tf.keras.applications.vgg16.\
-VGG16(input_tensor=input_tensor,include_top=False)
-vgg16_layer_dict={layer.name:layer for layer in vgg16_model.layers}
-
-original_loss=calculate_original_loss(vgg16_layer_dict,['block5_conv2'])
-style_loss=calculate_style_loss(vgg16_layer_dict,style_layers, 
-                                 pattern01.shape[i0]*pattern01.shape[i1])
-variation_loss=calculate_variation_loss(generated_input)
-ol,sl,vl,st=float(.5),float(1.),float(.1),i2
-loss=ol*original_loss+sl*style_loss+vl*variation_loss    
-gradients=tkb.gradients(loss,generated_input)[i0]
-calculate=tkb.function([generated_input],[loss,gradients])
-generated_data=preprocess(picture01)
-for i in tqdm(range(st)):
-    _,gradients_value=calculate([generated_data])
-    generated_data-=gradients_value*float(.001)
+    <h2>✒️ &nbsp; Generated Images</h2>       
+<div class='linked'><script type='text/x-sage'>
+%train_run 3 .7 .7 .7
 </script></div><br/>
 <div class="linked"><script type="text/x-sage">
 generated_image01=deprocess(generated_data)
-generated_image01=rr_img(generated_image01,int(270),int(400),int(600))/255
-pl.figure(figsize=(6,4))
+generated_image01=rr_img(generated_image01,int(270),int(350),int(500))/255
+pl.figure(figsize=(3,5))
 ti=[['coefficients','loss functions & steps'],
-    [ol,'original_loss'],[sl,'style_loss'],
-    [vl,'variation_loss'],[st,'steps']]
+    [round(ol,2),'original_loss'],[round(sl,2),'style_loss'],
+    [round(vl,2),'variation_loss'],[epochs,'epochs']]
 pl.imshow(cv2.cvtColor(generated_image01,cv2.COLOR_BGR2RGB))
-pl.show(); table(ti)
+pl.tight_layout(); pl.show(); table(ti)
 </script></div><br/>  
   </body>
 </html>
