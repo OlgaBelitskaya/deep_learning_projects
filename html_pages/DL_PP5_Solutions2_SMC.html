@@ -77,8 +77,8 @@ display_images('picture02.png','pattern02.png')
 <div class='linked'><script type='text/x-sage'>
 picture01=cv2.imread('picture02.png').astype('float32')
 pattern01=cv2.imread('pattern02.png').astype('float32')
-picture01=cv2.resize(picture01,(int(410),int(410)))
-pattern01=cv2.resize(pattern01,(int(410),int(410)))
+picture01=cv2.resize(picture01,(int(380),int(300)))
+pattern01=cv2.resize(pattern01,(int(380),int(300)))
 picture01=picture01.astype('float32')
 pattern01=pattern01.astype('float32')
 picture01.shape,pattern01.shape
@@ -96,7 +96,7 @@ def deprocess(img):
     img=np.clip(img,i0,int(255))         
     return img.astype('uint8') 
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 def inputs(original_img,style_img):
     original_img=original_img.astype('float32')
     style_img=style_img.astype('float32')
@@ -180,10 +180,10 @@ def train_run(pars):
 generated_image01=deprocess(generated_data)
 pl.figure(figsize=(6,4))
 ti=[['coefficients','loss functions & steps'],
-    [ol,'original_loss'],[sl,'style_loss'],
-    [vl,'variation_loss'],[epochs,'epochs']]
+    [round(ol,2),'original_loss'],[round(sl,2),'style_loss'],
+    [round(vl,2),'variation_loss'],[epochs,'epochs']]
 pl.imshow(cv2.cvtColor(generated_image01,cv2.COLOR_BGR2RGB))
-pl.show(); table(ti)
+pl.tight_layout(); pl.show(); table(ti)
 </script></div><br/>
   </body>
 </html>
