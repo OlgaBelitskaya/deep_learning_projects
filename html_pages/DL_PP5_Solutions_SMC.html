@@ -244,6 +244,11 @@ def model():
 model=model() 
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4,\
+x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2,\
+x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3,\
+x_train5,x_valid5,x_test5,y_train5,y_valid5,y_test5,\
+x_train6,x_valid6,x_test6,y_train6,y_valid6,y_test6
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_accuracy',mode='max',save_best_only=True)
@@ -258,7 +263,6 @@ history=model.fit(x_train1,y_train1,epochs=i16,
 keras_history_plot(history,7,'#348ABD')
 model.load_weights(fw)
 pretty_print(model.evaluate(x_test1,y_test1,verbose=i0))
-del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
 # Color Images / Decors
@@ -285,6 +289,11 @@ def model(leaky_alpha):
 model=model(float(.005))   
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1,\
+x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2,\
+x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4,\
+x_train5,x_valid5,x_test5,y_train5,y_valid5,y_test5,\
+x_train6,x_valid6,x_test6,y_train6,y_valid6,y_test6
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_accuracy',mode='max',save_best_only=True)
@@ -299,7 +308,6 @@ history=model.fit(x_train3,y_train3,
 keras_history_plot(history,7,'#348ABD')
 model.load_weights(fw)
 pretty_print(model.evaluate(x_test3,y_test3,verbose=i0))
-del x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
 # Grayscaled Images / Countries
@@ -325,6 +333,11 @@ def gray_model():
 gray_model=gray_model()
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1,\
+x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4,\
+x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3,\
+x_train5,x_valid5,x_test5,y_train5,y_valid5,y_test5,\
+x_train6,x_valid6,x_test6,y_train6,y_valid6,y_test6
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_accuracy',mode='max',save_best_only=True)
@@ -339,7 +352,6 @@ history=gray_model.fit(x_train2,y_train2,
 keras_history_plot(history,7,'#348ABD')
 gray_model.load_weights(fw)
 pretty_print(gray_model.evaluate(x_test2,y_test2,verbose=i0))
-del x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
 # Grayscaled Images / Decors
@@ -365,6 +377,11 @@ def gray_model(leaky_alpha):
 gray_model=gray_model(float(.01))
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1,\
+x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2,\
+x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3,\
+x_train5,x_valid5,x_test5,y_train5,y_valid5,y_test5,\
+x_train6,x_valid6,x_test6,y_train6,y_valid6,y_test6
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_accuracy',mode='max',save_best_only=True)
@@ -379,7 +396,6 @@ history=gray_model.fit(x_train4,y_train4,
 keras_history_plot(history,7,'#348ABD')
 gray_model.load_weights(fw)
 pretty_print(gray_model.evaluate(x_test4,y_test4,verbose=i0))
-del x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4
 </script></div><br/>
     <h2>✒️&nbsp;Step 3. Multi-Label Classification Models</h2>      
 <div class='linked'><script type='text/x-sage'>
@@ -408,6 +424,11 @@ def multi_model(leaky_alpha):
 multi_model=multi_model(float(.005))
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1,\
+x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2,\
+x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3,\
+x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4,\
+x_train6,x_valid6,x_test6,y_train6,y_valid6,y_test6
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_loss',mode='min',save_best_only=True)
@@ -452,13 +473,18 @@ def gray_multi_model(leaky_alpha):
 gray_multi_model=gray_multi_model(float(.01))
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
+del x_train1,x_valid1,x_test1,y_train1,y_valid1,y_test1,\
+x_train2,x_valid2,x_test2,y_train2,y_valid2,y_test2,\
+x_train3,x_valid3,x_test3,y_train3,y_valid3,y_test3,\
+x_train4,x_valid4,x_test4,y_train4,y_valid4,y_test4,\
+x_train5,x_valid5,x_test5,y_train5,y_valid5,y_test5
 checkpointer=ModelCheckpoint(
     filepath=fw,verbose=i0,save_weights_only=True,
     monitor='val_loss',mode='min',save_best_only=True)
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=gray_multi_model.fit(x_train6,y_train6_list,
-                             epochs=i8,batch_size=i16,verbose=i2,
+                             epochs=i12,batch_size=i16,verbose=i2,
                              validation_data=(x_valid6,y_valid6_list),
                              callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
