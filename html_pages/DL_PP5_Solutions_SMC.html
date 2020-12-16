@@ -79,8 +79,8 @@ fw='/tmp/checkpoint'
 dr2,dr25,dr3,dr5=\
 float(.2),float(.25),float(.3),float(.5)
 fr,al=float(.5),float(.02)
-[i0,i1,i2,i3,i4,i5]=\
-[int(0),int(1),int(2),int(3),int(4),int(5)]
+[i0,i1,i2,i3,i4,i5,i6]=\
+[int(0),int(1),int(2),int(3),int(4),int(5),int(6)]
 [i7,i8,i10,i11,i12,i16]=\
 [int(7),int(8),int(10),int(11),int(12),int(16)]
 [i20,i24,i32,i48,i50,i64,i96]=\
@@ -414,7 +414,7 @@ checkpointer=ModelCheckpoint(
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=multi_model.fit(x_train5,y_train5_list, 
-                        epochs=i16,batch_size=i16,verbose=i2,
+                        epochs=i12,batch_size=i16,verbose=i2,
                         validation_data=(x_valid5,y_valid5_list),
                         callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
@@ -434,12 +434,12 @@ def gray_multi_model(leaky_alpha):
     x=LeakyReLU(alpha=leaky_alpha)(x)
     x=MaxPooling2D(pool_size=(i2,i2))(x)    
     x=Dropout(dr25)(x)  
-    x=Conv2D(i256,(i5,i5),padding='same')(x)
+    x=Conv2D(i128,(i5,i5),padding='same')(x)
     x=LeakyReLU(alpha=leaky_alpha)(x)
     x=MaxPooling2D(pool_size=(i2,i2))(x)    
     x=Dropout(dr25)(x)             
     x=GlobalMaxPooling2D()(x) 
-    x=Dense(i2048)(x) 
+    x=Dense(i512)(x)
     x=LeakyReLU(alpha=leaky_alpha)(x)
     x=Dropout(dr25)(x)   
     y1=Dense(i4,activation='softmax')(x)
@@ -458,7 +458,7 @@ checkpointer=ModelCheckpoint(
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=gray_multi_model.fit(x_train6,y_train6_list,
-                             epochs=i16,batch_size=i16,verbose=i2,
+                             epochs=i8,batch_size=i16,verbose=i2,
                              validation_data=(x_valid6,y_valid6_list),
                              callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
