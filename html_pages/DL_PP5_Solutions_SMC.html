@@ -484,7 +484,7 @@ checkpointer=ModelCheckpoint(
 lr_reduction=ReduceLROnPlateau(
     monitor='val_loss',patience=i5,verbose=i0,factor=fr)
 history=gray_multi_model.fit(x_train6,y_train6_list,
-                             epochs=i12,batch_size=i16,verbose=i2,
+                             epochs=i8,batch_size=i16,verbose=i2,
                              validation_data=(x_valid6,y_valid6_list),
                              callbacks=[checkpointer,lr_reduction])
 </script></div><br/>
