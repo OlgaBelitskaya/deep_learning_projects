@@ -1,87 +1,91 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width'>
     <title>🏙DLPP53SMC</title>
-    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
-    <script>$(function (){
-    sagecell.makeSagecell({inputLocation:'div.linked',linked:true,
-                           evalButtonText:'Run Linked Cells'});});
+    <script src='https://sagecell.sagemath.org/static/embedded_sagecell.js'></script>
+    <script>$(function (){sagecell.makeSagecell(
+        {inputLocation:'div.linked',linked:true,evalButtonText:'Run Linked Cells'});});
     </script>
   </head>
   <style>
-  @import url('https://fonts.googleapis.com/css?family=Akronim|Lobster');
-  h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
-  p,a {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
-  .sagecell .CodeMirror-scroll {min-height:3em; max-height:30em;}
-  body {margin:5px 5px 5px 15px;}
+    @import 'https://fonts.googleapis.com/css?family=Akronim|Lobster';
+    h1,h2,th {color:#348ABD; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+    p,a {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+    .sagecell .CodeMirror-scroll {min-height:3em; max-height:60em;}
+    body {margin:5px 5px 5px 15px;}
   </style>
   <body>
     <h1>📑 &nbsp; Deep Learning. P5: Mixed Styles 2</h1>
 Perfect and complete explanation =>
-<a href="https://github.com/naokishibuya/deep-learning/blob/master/python/artistic_style_transfer.ipynb">
+<a href='https://github.com/naokishibuya/deep-learning/blob/master/python/artistic_style_transfer.ipynb'>
 &#x1F300; &nbsp;  &nbsp; Artistic Style Transfer by Naoki Shibuya &nbsp; &nbsp;</a><br>   
-<a href="https://olgabelitskaya.github.io/README.html">&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a>
-<a href="https://colab.research.google.com/drive/1IS_6BqJDLVbJJsuTuWTr3OfGP5uEu2eV">
+<a href='https://olgabelitskaya.github.io/README.html'>&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a>
+<a href='https://colab.research.google.com/drive/1IS_6BqJDLVbJJsuTuWTr3OfGP5uEu2eV'>
 &#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a>
-<a href="https://www.instagram.com/olga.belitskaya/">&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
-<a href="https://www.pinterest.ru/olga_belitskaya/code-style/">&#x1F300; &nbsp; Pinterest Posts</a><br/>
+<a href='https://www.instagram.com/olga.belitskaya/'>&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href='https://www.pinterest.ru/olga_belitskaya/code-style/'>&#x1F300; &nbsp; Pinterest Posts</a><br/>
     <h2>✒️ &nbsp; Libraries</h2>  
-<div class="linked"><script type="text/x-sage">
-#unlock to install modules
-#!python3 -m pip install --ignore-installed --upgrade tensorflow==1.14.0
-#!python3 -m pip install opencv-python --user
-#!python3 -m pip install tqdm --user
-path='/home/sc_work/.sage/local/lib/python3.7/site-packages'
+<div class='linked'><script type='text/x-sage'>
+!python3 -m pip install --upgrade pip \
+--user --quiet --no-warn-script-location
+!python3 -m pip install tqdm \
+--user --quiet --no-warn-script-location
+!python3 -m pip install opencv-python \
+--user --quiet --no-warn-script-location
+!python3 -m pip install argon2-cffi \
+--user --quiet --no-warn-script-location
+!python3 -m pip install --ignore-installed --upgrade tensorflow==2.3.0 \
+--user --quiet --no-warn-script-location
+!python3 -m pip install h5py==2.10.0 \
+--user --quiet --no-warn-script-location
+path='/home/sc_work/.sage/local/lib/python3.8/site-packages'
 import sys; sys.path.append(path)
 import warnings; warnings.filterwarnings('ignore')
-</script></div><br/>
-<div class="linked"><script type="text/x-sage">
-import urllib,cv2
+import os,urllib,cv2
 import numpy as np,tensorflow as tf,pylab as pl
-import tensorflow.keras.backend as tkb
+import tensorflow.keras.backend as tfkb
+from IPython.core.magic import register_line_magic
 from tqdm import tqdm
 i0,i1,i2,i3=int(0),int(1),int(2),int(3)
-fpath='https://olgabelitskaya.github.io/'
+files_path='https://olgabelitskaya.github.io/'
 </script></div><br/>
     <h2>✒️ &nbsp; Displaying Horizontal Images</h2> 
-<div class="linked"><script type="text/x-sage">
-def display_images(original,style,fpath=fpath):
-    input_file=urllib.request.urlopen(fpath+original)
-    output_file=open(original,'wb'); 
-    output_file.write(input_file.read())
-    output_file.close(); input_file.close()
-    input_file=urllib.request.urlopen(fpath+style)
-    output_file=open(style,'wb'); 
-    output_file.write(input_file.read())
-    output_file.close(); input_file.close()
+<div class='linked'><script type='text/x-sage'>
+def display_images(original,style,files_path=files_path):
+    for f in [original,style]:
+        input_file=urllib.request.urlopen(files_path+f)
+        output_file=open(f,'wb'); 
+        output_file.write(input_file.read())
+        output_file.close(); input_file.close()
     original_img=cv2.imread(original)
     style_img=cv2.imread(style)    
-    fig=pl.figure(figsize=(6,3))
+    fig=pl.figure(figsize=(8,4))
     ax=fig.add_subplot(121)
-    pl.title("Shape of the original image: %s"%str(original_img.shape),
-             fontsize=int(8))
+    str1='Shape of the original image: %s'
+    pl.title(str1%str(original_img.shape),fontsize=int(8))
     ax.imshow(cv2.cvtColor(original_img,cv2.COLOR_BGR2RGB))
     ax=fig.add_subplot(122)
-    pl.title("Shape of the style image: %s"%str(style_img.shape),
-             fontsize=int(8))
-    ax.imshow(cv2.cvtColor(style_img,cv2.COLOR_BGR2RGB)); pl.show()
-</script></div><br/>    
-<div class="linked"><script type="text/x-sage">
+    str2='Shape of the style image: %s'
+    pl.title(str2%str(style_img.shape),fontsize=int(8))
+    ax.imshow(cv2.cvtColor(style_img,cv2.COLOR_BGR2RGB))
+    pl.tight_layout(); pl.show()
+</script></div><br/>
+<div class='linked'><script type='text/x-sage'>
 display_images('picture09.png','pattern09.png')
 </script></div><br/>
     <h2>✒️ &nbsp; Preprocessing</h2> 
-<div class="linked"><script type="text/x-sage">
-picture02=cv2.imread('picture09.png').astype('float32')
-pattern02=cv2.imread('pattern09.png').astype('float32')
-picture02=cv2.resize(picture02,(int(360),int(330)))
-pattern02=cv2.resize(pattern02,(int(360),int(330)))
-picture02=picture02.astype('float32')
-pattern02=pattern02.astype('float32')
-picture02.shape,pattern02.shape
+<div class='linked'><script type='text/x-sage'>
+picture01=cv2.imread('picture09.png').astype('float32')
+pattern01=cv2.imread('pattern09.png').astype('float32')
+picture01=cv2.resize(picture01,(int(350),int(330)))
+pattern01=cv2.resize(pattern01,(int(350),int(330)))
+picture01=picture01.astype('float32')
+pattern01=pattern01.astype('float32')
+picture01.shape,pattern01.shape
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 def preprocess(img):
     img=img.copy(); img=np.expand_dims(img,axis=i0) 
     return tf.keras.applications.vgg16.preprocess_input(img)
@@ -94,47 +98,32 @@ def deprocess(img):
     img=np.clip(img,i0,int(255))         
     return img.astype('uint8')
 def inputs(original_img,style_img):
+    original_img=original_img.astype('float32')
+    style_img=style_img.astype('float32')
     original_input=tf.constant(preprocess(original_img))
     style_input=tf.constant(preprocess(style_img))
-    generated_input=tf.placeholder(tf.float32,original_input.shape)
+    generated_input=tf.compat.v1\
+    .placeholder(tf.float32,original_input.shape)
     return original_input,style_input,generated_input
-</script></div><br/>
-<div class="linked"><script type="text/x-sage">
-original_input2,style_input2,generated_input2=\
-inputs(picture02,pattern02)
-input_tensor2=tf.concat([original_input2,style_input2,
-                         generated_input2],axis=i0)
-input_tensor2.shape
-</script></div><br/>
-    <h2>✒️ &nbsp; VGG16 Usage</h2>    
-<div class="linked"><script type="text/x-sage">
-vgg16_model=tf.keras.applications.vgg16.\
-VGG16(input_tensor=input_tensor2,include_top=False)
-vgg16_layer_dict={layer.name:layer for layer in vgg16_model.layers}
-</script></div><br/>
-<div class="linked"><script type="text/x-sage">
-style_layers=['block1_conv1','block2_conv1','block3_conv1',
-              'block4_conv1','block5_conv1']
 def calculate_original_loss(layer_dict,original_layer_names):
-    loss=float(0)
+    loss=0
     for name in original_layer_names:
         layer=layer_dict[name]
         original_features=layer.output[i0,:,:,:]  
         generated_features=layer.output[i2,:,:,:] 
-        loss+=tkb.sum(tkb.square(generated_features-original_features))
+        loss+=tfkb.sum(tfkb.square(generated_features-original_features))
     return loss/len(original_layer_names)
 def gram_matrix(x):    
-    features=tkb.batch_flatten(tkb.permute_dimensions(x,(i2,i0,i1))) 
-    gram=tkb.dot(features,tkb.transpose(features))
+    features=tfkb.batch_flatten(tfkb.permute_dimensions(x,(i2,i0,i1))) 
+    gram=tfkb.dot(features,tfkb.transpose(features))
     return gram
 def get_style_loss(style_features,generated_features,size):
     S=gram_matrix(style_features)
     G=gram_matrix(generated_features)
-    channels=i3
-    return tkb.sum(tkb.square(S-G))/\
-          (float(4.)*(channels**i2)*(size**i2))
+    channels=3
+    return tfkb.sum(tfkb.square(S-G))/(float(4.)*(channels**i2)*(size**i2))
 def calculate_style_loss(layer_dict,style_layer_names,size):
-    loss=float(0)
+    loss=0
     for name in style_layer_names:
         layer=layer_dict[name]
         style_features=layer.output[i1,:,:,:] 
@@ -142,36 +131,63 @@ def calculate_style_loss(layer_dict,style_layer_names,size):
         loss+=get_style_loss(style_features,generated_features,size) 
     return loss/len(style_layer_names)
 def calculate_variation_loss(x):
-    row_diff=tkb.square(x[:,:-i1,:-i1,:]-x[:,i1:,:-i1,:])
-    col_diff=tkb.square(x[:,:-i1,:-i1,:]-x[:,:-i1,i1:,:])
-    return tkb.sum(tkb.pow(row_diff+col_diff,float(1.25)))
+    row_diff=tfkb.square(x[:,:-i1,:-i1,:]-x[:,i1:,:-i1,:])
+    col_diff=tfkb.square(x[:,:-i1,:-i1,:]-x[:,:-i1,i1:,:])
+    return tfkb.sum(tfkb.pow(row_diff+col_diff,float(1.25)))
+</script></div><br/>
+    <h2>✒️ &nbsp; VGG16 Usage</h2>    
+<div class='linked'><script type='text/x-sage'>
+style_layers=['block1_conv1','block2_conv1','block3_conv1',
+              'block4_conv1','block5_conv1']
+generated_data=[]; epochs,ol,sl,vl=i0,0.,0.,0.
+@register_line_magic
+def train_run(pars):
+    global generated_data,epochs,ol,sl,vl
+    pars=pars.split()
+    epochs=int(pars[0]); ol=float(pars[1])
+    sl=float(pars[2]); vl=float(pars[3])
+    sh=pattern01.shape[0]*pattern01.shape[1]
+    with tf.Graph().as_default():
+        original_input,style_input,generated_input=\
+        inputs(picture01,pattern01)
+        input_tensor=tf.concat([original_input,style_input,
+                                generated_input],axis=0)
+        print(input_tensor.shape)
+        vgg16_model=tf.keras.applications.vgg16.\
+        VGG16(input_tensor=input_tensor,include_top=False)
+        vgg16_layer_dict={layer.name:layer 
+                          for layer in vgg16_model.layers}
+        original_loss=\
+        calculate_original_loss(vgg16_layer_dict,
+                                ['block5_conv2'])
+        style_loss=\
+        calculate_style_loss(vgg16_layer_dict,style_layers,sh)
+        variation_loss=\
+        calculate_variation_loss(generated_input)
+        loss=ol*original_loss+sl*style_loss+vl*variation_loss       
+        gradients=tfkb.gradients(loss,generated_input)[0]
+        calculate=tfkb.function([generated_input],
+                                [loss,gradients])
+        generated_data=preprocess(picture01)
+        for i in tqdm(range(epochs)):
+            _,gradients_value=calculate([generated_data])
+            generated_data-=gradients_value*.001
 </script></div><br/>
     <h2>✒️ &nbsp; Generated Images</h2>       
-<div class="linked"><script type="text/x-sage">
-original_loss2=calculate_original_loss(vgg16_layer_dict,['block5_conv2'])
-style_loss2=calculate_style_loss(vgg16_layer_dict,style_layers, 
-                                 pattern02.shape[i0]*pattern02.shape[i1])
-variation_loss2=calculate_variation_loss(generated_input2)
-ol,sl,vl,st=float(.5),float(1.),float(.1),i2
-loss2=ol*original_loss2+sl*style_loss2+vl*variation_loss2    
-gradients2=tkb.gradients(loss2,generated_input2)[i0]
-calculate2=tkb.function([generated_input2],[loss2,gradients2])
-generated_data2=preprocess(picture02)
-for i in tqdm(range(st)):
-    _,gradients_value2=calculate2([generated_data2])
-    generated_data2-=gradients_value2*float(.001)
+<div class='linked'><script type='text/x-sage'>
+%train_run 3 .7 .7 .7
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
-generated_image01=deprocess(generated_data2)
-pl.figure(figsize=(4,4))
+<div class='linked'><script type='text/x-sage'>
+generated_image01=deprocess(generated_data)
+pl.figure(figsize=(6,4))
 ti=[['coefficients','loss functions & steps'],
-    [ol,'original_loss'],[sl,'style_loss'],
-    [vl,'variation_loss'],[st,'steps']]
+    [round(ol,2),'original_loss'],[round(sl,2),'style_loss'],
+    [round(vl,2),'variation_loss'],[epochs,'epochs']]
 pl.imshow(cv2.cvtColor(generated_image01,cv2.COLOR_BGR2RGB))
-pl.show(); table(ti)
+pl.tight_layout(); pl.show(); table(ti)
 </script></div><br/>
-    <h2>✒️ &nbsp; Displaying Vertical Images</h2>       
-<div class="linked"><script type="text/x-sage">
+    <h2>✒️ &nbsp; Displaying Vertical Images</h2> 
+<div class='linked'><script type='text/x-sage'>
 display_images('picture01.png','pattern01.png')
 </script></div><br/>
     <h2>✒️ &nbsp; Preprocessing</h2> 
