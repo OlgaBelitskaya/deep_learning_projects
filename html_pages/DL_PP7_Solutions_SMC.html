@@ -112,7 +112,7 @@ fig=pl.figure(figsize=(8,2))
 n=randint(0,y_train.shape[0]-5)
 for i in range(n,n+5):
     ax=fig.add_subplot(1,5,i-n+1,xticks=[],yticks=[])
-    ax.set_title(names[y_train[i]])
+    ax.set_title(names[y_train[i]],fontsize=10,color='#aa33ff')
     ax.imshow((x_train[i]))
 pl.tight_layout(); pl.show()
 img_size=int(64); n=int(len(x_test)/2)
@@ -130,7 +130,7 @@ pd.DataFrame([[x_train.shape,x_valid.shape,x_test.shape],
              index=['images` shape','image type',
                     'labels` shape','label type'])
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">      
+<div class='linked'><script type='text/x-sage'>      
 class TData(tds):
     def __init__(self,x,y):   
         self.x=torch.tensor(x,dtype=torch.float32)
@@ -152,36 +152,32 @@ random_seed=23
 train2=TData(x_train2,y_train[:n_train])
 valid2=TData(x_valid2,y_valid[:n_valid])
 test2=TData(x_test2,y_test[:n_test])
-dataloaders={'train':tdl(dataset=train2,shuffle=True, 
-                         batch_size=batch_size2), 
-             'valid':tdl(dataset=valid2,shuffle=True, 
-                         batch_size=batch_size2),
-             'test':tdl(dataset=test2,shuffle=True, 
-                        batch_size=batch_size2)}
+dataloaders={'train':tdl(dataset=train2,shuffle=True,batch_size=batch_size2), 
+             'valid':tdl(dataset=valid2,shuffle=True,batch_size=batch_size2),
+             'test':tdl(dataset=test2,shuffle=True,batch_size=batch_size2)}
 del train2,valid2,test2
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 @register_line_magic
 def display_examples(data):
     for images,labels in dataloaders[data]:  
         print('Image dimensions: %s'%str(images.shape))
         print('Label dimensions: %s'%str(labels.shape))
         n=np.random.randint(1,3)
-        fig=pl.figure(figsize=(10,2))
+        fig=pl.figure(figsize=(8,2))
         for i in range(n,n+5):
-            ax=fig.add_subplot(1,5,i-n+1,\
-            xticks=[],yticks=[],title=names[labels[i].item()])
+            ax=fig.add_subplot(1,5,i-n+1,xticks=[],yticks=[])
+            ax.set_title(names[labels[i].item()],fontsize=10,color='#aa33ff')
             ax.imshow(np.transpose(images[i],(1,2,0)))
-        pl.show()
+        pl.tight_layout(); pl.show()
         break
 %display_examples valid
 </script></div><br/>
     <h2>✒️ &nbsp; Step 3. Keras</h2>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 def kmodel(leaky_alpha):
     model=Sequential()
-    model.add(tkl.Conv2D(int(32),(int(5),int(5)),
-                         padding='same', 
+    model.add(tkl.Conv2D(int(32),(int(5),int(5)),padding='same', 
                          input_shape=x_train.shape[int(1):]))
     model.add(tkl.LeakyReLU(alpha=leaky_alpha))    
     model.add(tkl.MaxPooling2D(pool_size=(int(2),int(2))))
@@ -201,59 +197,52 @@ def kmodel(leaky_alpha):
     return model
 kmodel=kmodel(float(.005))
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
-def history_plot(fit_history):
-    pl.figure(figsize=(10,10)); pl.subplot(211)
-    keys=list(fit_history.history.keys())[0:4]
-    pl.plot(fit_history.history[keys[0]],
-            color='slategray',label='train')
-    pl.plot(fit_history.history[keys[2]],
-            color='#aa33ff',label='valid')
-    pl.xlabel("Epochs"); pl.ylabel("Loss")
-    pl.legend(); pl.grid()
-    pl.title('Loss Function')     
-    pl.subplot(212)
-    pl.plot(fit_history.history[keys[1]],
-            color='slategray',label='train')
-    pl.plot(fit_history.history[keys[3]],
-            color='#aa33ff',label='valid')
-    pl.xlabel("Epochs"); pl.ylabel("Accuracy")    
-    pl.legend(); pl.grid()
-    pl.title('Accuracy'); pl.show()
+<div class='linked'><script type='text/x-sage'>
+def keras_history_plot(fit_history,fig_size=8,color='#aa33ff'):
+    keys=list(fit_history.history.keys())
+    list_history=[fit_history.history[keys[i]] 
+                  for i in range(len(keys))]
+    dfkeys=pd.DataFrame(list_history).T
+    dfkeys.columns=keys
+    fig=pl.figure(figsize=(fig_size,fig_size))
+    ax1=fig.add_subplot(2,1,1)
+    dfkeys.iloc[:,[int(0),int(2)]].plot(
+        ax=ax1,color=['slategray',color],grid=True)
+    ax2=fig.add_subplot(2,1,2)
+    dfkeys.iloc[:,[int(1),int(3)]].plot(
+        ax=ax2,color=['slategray',color],grid=True)
+    pl.tight_layout(); pl.show()
 </script></div><br/>      
-<div class="linked"><script type="text/x-sage">
-fw='weights.best.hdf5'
-early_stopping=tkc.EarlyStopping(monitor='val_loss',
-                                 patience=int(20),verbose=int(2))
-checkpointer=tkc.ModelCheckpoint(filepath=fw,verbose=int(2),
-                                 save_best_only=True)
-lr_reduction=tkc.ReduceLROnPlateau(monitor='val_loss',verbose=int(2),
-                                   patience=int(5),factor=float(.8))
-history=kmodel.fit(x_train,y_train,epochs=int(5),
-                   batch_size=int(16),verbose=int(2),
-                   validation_data=(x_valid,y_valid),
-                   callbacks=[checkpointer,
-                              early_stopping,
-                              lr_reduction])
+<div class='linked'><script type='text/x-sage'>
+fw='/tmp/checkpoint'
+early_stopping=tkc.EarlyStopping(
+    monitor='val_loss',patience=int(20),verbose=int(2))
+checkpointer=tkc.ModelCheckpoint(
+    filepath=fw,verbose=int(0),save_weights_only=True,
+    monitor='val_accuracy',mode='max',save_best_only=True)
+lr_reduction=tkc.ReduceLROnPlateau(
+    monitor='val_loss',patience=int(5),verbose=int(0),factor=float(.8))
+history=kmodel.fit(
+    x_train,y_train,epochs=int(5),batch_size=int(16),verbose=int(2),
+    validation_data=(x_valid,y_valid),
+    callbacks=[checkpointer,early_stopping,lr_reduction])
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
-history_plot(history)
-del history
+<div class='linked'><script type='text/x-sage'>
+keras_history_plot(history); del history
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 kmodel.load_weights(fw)
-kmodel.evaluate(x_test,y_test)
+kmodel.evaluate(x_test,y_test,verbose=int(0))
 y_test_predict=np.argmax(kmodel.predict(x_test),axis=-1)
 os.remove(fw)
 </script></div><br/>
     <h2>✒️ &nbsp; Step 4. PyTorch</h2>
-<div class="linked"><script type="text/x-sage">
-for param in tmodel.parameters():
-    param.requires_grad=False
+<div class='linked'><script type='text/x-sage'>
+for param in tmodel.parameters(): param.requires_grad=False
 tmodel.classifier[3].requires_grad=True
 print('\n\n',tmodel)
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 def model_acc(model,data_loader):
     correct_preds,num_examples=int(0),int(0)
     for features,targets in data_loader:
@@ -278,7 +267,7 @@ def epoch_loss(model,data_loader):
             curr_loss+=loss
         return curr_loss/num_examples
 </script></div><br/>      
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 @register_line_magic
 def train_run(epochs):
     epochs=int(epochs)
@@ -303,7 +292,7 @@ def train_run(epochs):
                   (model_acc(tmodel,dataloaders['valid']),
                    epoch_loss(tmodel,dataloaders['valid'])))
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 num_classes=int(10)
 tmodel.classifier[6]=tnn.Sequential(
     tnn.Linear(int(4096),int(256)),tnn.ReLU(),
@@ -312,47 +301,40 @@ tmodel=tmodel.to(dev)
 optimizer=torch.optim.Adam(tmodel.parameters())
 %train_run 1
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">
+<div class='linked'><script type='text/x-sage'>
 tmodel.eval()
 with torch.set_grad_enabled(False):
-    print('test acc: %.2f%%'\
-          %model_acc(tmodel,dataloaders['test']))
+    print('test acc: %.2f%%'%model_acc(tmodel,dataloaders['test']))
 </script></div><br/>
-    <h2>✒️ &nbsp; Step 5. Models' Predictions</h2>
-<div class="linked"><script type="text/x-sage">
-fig=pl.figure(figsize=(10,4))
-randch=np.random.choice(x_test.shape[0],
-                        size=6,replace=False)
+    <h2>✒️ &nbsp; Step 5. Models` Predictions</h2>
+<div class='linked'><script type='text/x-sage'>
+fig=pl.figure(figsize=(8,4))
+randch=np.random.choice(x_test.shape[0],size=6,replace=False)
 for i,idx in enumerate(randch):
     ax=fig.add_subplot(2,3,i+1,xticks=[],yticks=[])
     ax.imshow(np.squeeze(x_test[idx]))
-    pred_idx=y_test_predict[idx]
-    true_idx=y_test[idx]
-    ax.set_title("{} ({})".format(names[pred_idx],
-                                  names[true_idx]),
-                 color=("#aa33ff" if pred_idx==true_idx 
-                        else "darkred"))
-pl.show()
+    pred_idx=y_test_predict[idx]; true_idx=y_test[idx]
+    ax.set_title('{} ({})'.format(names[pred_idx],names[true_idx]),
+                 color=('#aa33ff' if pred_idx==true_idx else 'darkred'))
+pl.tight_layout(); pl.show()
 </script></div><br/>
-<div class="linked"><script type="text/x-sage">      
+<div class='linked'><script type='text/x-sage'>      
 def show_image(img):
     npimg=img.numpy(); tr=(1,2,0)
-    pl.figure(figsize=(10,2))
+    pl.figure(figsize=(8,2))
     pl.imshow(np.transpose(npimg,tr))
     pl.xticks([]); pl.show()
 with torch.no_grad():
     for i,(images,labels) in enumerate(dataloaders['test']):
         show_image(utils.make_grid(images[:3]))
         print('\ntrue labels: ',
-              ''.join('%20s'%names[labels[j]] 
-                       for j in range(3)))
+              ''.join('%20s'%names[labels[j]] for j in range(3)))
         images=images.to(dev)
         labels=labels.to(dev)
         outputs=tmodel(images)
         _,preds=torch.max(outputs,int(1))
         print('\npredictions: ',
-             ''.join('%20s'%names[preds[j]]
-                      for j in range(3)))
+             ''.join('%20s'%names[preds[j]] for j in range(3)))
         if i==1: break
 </script></div><br/>
   </body>
