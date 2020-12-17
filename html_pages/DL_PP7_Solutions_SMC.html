@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width'>
+    <title>🏙DLPP7SMC</title>
+    <script src='https://sagecell.sagemath.org/static/embedded_sagecell.js'></script>
+    <script>$(function(){sagecell.makeSagecell(
+      {inputLocation:'div.linked',linked:true,evalButtonText:'Run Linked Cells'});});
+    </script>
+  </head>
+  <style>
+    @import 'https://fonts.googleapis.com/css?family=Akronim|Lobster';
+    h1,h2,th {color:#aa33ff; font-family:'Akronim'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+    p,a,table {color:slategray; font-family:'Lobster'; font-size:120%; text-shadow:4px 4px 4px #aaa;}
+    .sagecell .CodeMirror-scroll {min-height:3em; max-height:60em;}
+    body {margin:5px 5px 5px 15px;}
+  </style>  
+  <body>
+    <h1>📑 &nbsp; Deep Learning. P7: Horse Breeds` Recognition</h1>
+<a href='https://olgabelitskaya.github.io/README.html'>&#x1F300; &nbsp; Home Page &nbsp; &nbsp; &nbsp;</a> 
+<a href='https://colab.research.google.com/drive/1uB1PuT_uNGM2tv88ZDkIj6Dhi_Rf91PA'>
+&#x1F300; &nbsp; Google Colaboratory Variant &nbsp; &nbsp; &nbsp;</a> 
+<a href='https://www.instagram.com/olga.belitskaya/'>&#x1F300; &nbsp; Instagram Posts &nbsp; &nbsp; &nbsp;</a>     
+<a href='https://www.pinterest.ru/olga_belitskaya/code-style/'>&#x1F300; &nbsp; Pinterest Posts</a><br/>
+In this project, we'll classify images from the dataset
+<a href='https://www.kaggle.com/olgabelitskaya/horse-breeds'>Horse Breeds</a>.<br/>
+The content is about 500 images (160x160x3) with 7 horse breeds <br/>
+stored in the file <i>HorseBreedImages.h5.zip</i>.<br/>
+In the original dataset, photo files are in the .png format and they are labeled by file prefixes.<br/>
+<div class='linked'><script type='text/x-sage'>
+%%html
+<table style='width:30%; background-color:silver; 
+              font-family:Lobster; font-size:150%;'>
+<tr><th>Label </th><th> Breeds </th></tr>
+<tr><td style='color:#FF355E;'><center> 0 </center></td>
+<td style='color:#FF355E;'><left> => Akhal-Teke </left></td></tr>
+<tr><td style='color:#FF6037;'><center> 1 </center></td>
+<td style='color:#FF6037;'><left> => Appaloosa </left></td></tr>
+<tr><td style='color:#FF9966;'><center> 2 </center></td>
+<td style='color:#FF9966;'><left> => Orlov Trotter </left></td></tr>
+<tr><td style='color:#FFCC33;'><center> 3 </center></td>
+<td style='color:#FFCC33;'><left> => Vladimir Heavy Draft </left></td></tr> 
+<tr><td style='color:#FFFF66;'><center> 4 </center></td>
+<td style='color:#FFFF66;'><left> => Percheron </left></td></tr>
+<tr><td style='color:#CCFF00;'><center> 5 </center></td>
+<td style='color:#CCFF00;'><left> => Arabian </left></td></tr>
+<tr><td style='color:#66FF66;'><center> 6 </center></td>
+<td style='color:#66FF66;'><left> => Friesian </left></td></tr>
+</table>
+</script></div><br/>
+We'll preprocess the images, then train neural networks.<br/> 
+We are going to apply 
+<a href='https://keras.io/'>Keras: a Python Deep Learning Library</a><br/>
+and
+<a href='https://pytorch.org/'>PyTorch: an Open Source Machine Learning Framework</a>.<br/>
+    <h2>✒️ &nbsp; Step 0. Code Modules & Settings</h2>      
+<div class='linked'><script type='text/x-sage'>
+!python3 -m pip install --upgrade pip \
+--user --quiet --no-warn-script-location
+!python3 -m pip install torch==1.6.0 \
+--user --quiet --no-warn-script-location
+!python3 -m pip install torchvision==0.7.0 \
+--user --quiet --no-warn-script-location
+!python3 -m pip install argon2-cffi \
+--user --quiet --no-warn-script-location
+!python3 -m pip install --ignore-installed --upgrade tensorflow==2.3.0 \
+--user --quiet --no-warn-script-location
+!python3 -m pip install h5py==2.10.0 \
+--user --quiet --no-warn-script-location
+path='/home/sc_work/.sage/local/lib/python3.8/site-packages'
+import sys; sys.path.append(path)
+import warnings; warnings.filterwarnings('ignore')
+import h5py,urllib,torch,zipfile,os
+import tensorflow as tf,pylab as pl
+import tensorflow.keras.layers as tkl
+import tensorflow.keras.callbacks as tkc
+from tensorflow.keras.models import Sequential
+import pandas as pd,numpy as np
+import tensorflow.image as timage
+from torch.utils.data import DataLoader as tdl
+from torch.utils.data import Dataset as tds
+from torchvision import transforms,utils,models
+import torch.nn.functional as tnnf
+import torch.nn as tnn
+dev=torch.device('cuda:0' \
+if torch.cuda.is_available() else 'cpu')
+tmodel=models.vgg16(pretrained=True,progress=False)
+from IPython.core.magic import register_line_magic
+</script></div><br/>      
+    <h2>✒️ &nbsp; Step 1. Data Loading</h2> 
+<div class='linked'><script type='text/x-sage'>
+path='https://olgabelitskaya.github.io/'
+zf='HorseBreedImages.h5.zip'
+input_file=urllib.request.urlopen(path+zf)
+output_file=open(zf,'wb'); 
+output_file.write(input_file.read())
+output_file.close(); input_file.close()
+zipf=zipfile.ZipFile(zf,'r')
+zipf.extractall(''); zipf.close()
+f=h5py.File(zf[:-4],'r')
+keys=list(f.keys()); print(keys)
+</script></div><br/>
+    <h2>✒️ &nbsp; Step 2. Data Processing</h2>  
+<div class='linked'><script type='text/x-sage'>
+x_test,y_test=np.array(f[keys[0]]),np.array(f[keys[1]])
+x_train,y_train=np.array(f[keys[2]]),np.array(f[keys[3]])
+os.remove(zf); os.remove(zf[:-4])
+names=['Akhal-Teke','Appaloosa','Orlov Trotter',
+       'Vladimir Heavy Draft','Percheron','Arabian','Friesian']
+fig=pl.figure(figsize=(8,2))
+n=randint(0,y_train.shape[0]-5)
+for i in range(n,n+5):
+    ax=fig.add_subplot(1,5,i-n+1,xticks=[],yticks=[])
+    ax.set_title(names[y_train[i]])
+    ax.imshow((x_train[i]))
+pl.tight_layout(); pl.show()
+img_size=int(64); n=int(len(x_test)/2)
+x_train=timage.resize(x_train,[img_size,img_size])
+x_train=x_train.numpy()
+x_test=timage.resize(x_test,[img_size,img_size])
+x_test=x_test.numpy()
+x_valid,y_valid=x_test[:n],y_test[:n]
+x_test,y_test=x_test[n:],y_test[n:]
+pd.DataFrame([[x_train.shape,x_valid.shape,x_test.shape],
+              [x_train.dtype,x_valid.dtype,x_test.dtype],
+              [y_train.shape,y_valid.shape,y_test.shape],
+              [y_train.dtype,y_valid.dtype,y_test.dtype]],
+             columns=['train','valid','test'],
+             index=['images` shape','image type',
+                    'labels` shape','label type'])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">      
+class TData(tds):
+    def __init__(self,x,y):   
+        self.x=torch.tensor(x,dtype=torch.float32)
+        self.y=torch.tensor(y,dtype=torch.int32)
+    def __getitem__(self,index):
+        img,lbl=self.x[index],self.y[index]
+        return img,lbl
+    def __len__(self):
+        return self.y.shape[0]
+batch_size2=int(8); img_size2=int(64)
+n_train=batch_size2*(x_train.shape[0]//batch_size2)
+x_train2=np.transpose(x_train,(0,3,1,2))[:n_train]
+print(x_train2.mean(),x_train2.std())
+n_valid=batch_size2*(x_valid.shape[0]//batch_size2)
+x_valid2=np.transpose(x_valid,(0,3,1,2))[:n_valid]
+n_test=batch_size2*(x_test.shape[0]//batch_size2)
+x_test2=np.transpose(x_test,(0,3,1,2))[:n_test]
+random_seed=23
+train2=TData(x_train2,y_train[:n_train])
+valid2=TData(x_valid2,y_valid[:n_valid])
+test2=TData(x_test2,y_test[:n_test])
+dataloaders={'train':tdl(dataset=train2,shuffle=True, 
+                         batch_size=batch_size2), 
+             'valid':tdl(dataset=valid2,shuffle=True, 
+                         batch_size=batch_size2),
+             'test':tdl(dataset=test2,shuffle=True, 
+                        batch_size=batch_size2)}
+del train2,valid2,test2
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+@register_line_magic
+def display_examples(data):
+    for images,labels in dataloaders[data]:  
+        print('Image dimensions: %s'%str(images.shape))
+        print('Label dimensions: %s'%str(labels.shape))
+        n=np.random.randint(1,3)
+        fig=pl.figure(figsize=(10,2))
+        for i in range(n,n+5):
+            ax=fig.add_subplot(1,5,i-n+1,\
+            xticks=[],yticks=[],title=names[labels[i].item()])
+            ax.imshow(np.transpose(images[i],(1,2,0)))
+        pl.show()
+        break
+%display_examples valid
+</script></div><br/>
+    <h2>✒️ &nbsp; Step 3. Keras</h2>
+<div class="linked"><script type="text/x-sage">
+def kmodel(leaky_alpha):
+    model=Sequential()
+    model.add(tkl.Conv2D(int(32),(int(5),int(5)),
+                         padding='same', 
+                         input_shape=x_train.shape[int(1):]))
+    model.add(tkl.LeakyReLU(alpha=leaky_alpha))    
+    model.add(tkl.MaxPooling2D(pool_size=(int(2),int(2))))
+    model.add(tkl.Dropout(float(.25)))
+    model.add(tkl.Conv2D(int(96),(int(5),int(5))))
+    model.add(tkl.LeakyReLU(alpha=leaky_alpha))    
+    model.add(tkl.MaxPooling2D(pool_size=(int(2),int(2))))
+    model.add(tkl.Dropout(float(.25)))   
+    model.add(tkl.GlobalMaxPooling2D())     
+    model.add(tkl.Dense(int(512)))
+    model.add(tkl.LeakyReLU(alpha=leaky_alpha))
+    model.add(tkl.Dropout(float(.25)))     
+    model.add(tkl.Dense(int(7)))
+    model.add(tkl.Activation('softmax'))   
+    model.compile(loss='sparse_categorical_crossentropy',
+                  optimizer='nadam',metrics=['accuracy'])   
+    return model
+kmodel=kmodel(float(.005))
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def history_plot(fit_history):
+    pl.figure(figsize=(10,10)); pl.subplot(211)
+    keys=list(fit_history.history.keys())[0:4]
+    pl.plot(fit_history.history[keys[0]],
+            color='slategray',label='train')
+    pl.plot(fit_history.history[keys[2]],
+            color='#aa33ff',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Loss")
+    pl.legend(); pl.grid()
+    pl.title('Loss Function')     
+    pl.subplot(212)
+    pl.plot(fit_history.history[keys[1]],
+            color='slategray',label='train')
+    pl.plot(fit_history.history[keys[3]],
+            color='#aa33ff',label='valid')
+    pl.xlabel("Epochs"); pl.ylabel("Accuracy")    
+    pl.legend(); pl.grid()
+    pl.title('Accuracy'); pl.show()
+</script></div><br/>      
+<div class="linked"><script type="text/x-sage">
+fw='weights.best.hdf5'
+early_stopping=tkc.EarlyStopping(monitor='val_loss',
+                                 patience=int(20),verbose=int(2))
+checkpointer=tkc.ModelCheckpoint(filepath=fw,verbose=int(2),
+                                 save_best_only=True)
+lr_reduction=tkc.ReduceLROnPlateau(monitor='val_loss',verbose=int(2),
+                                   patience=int(5),factor=float(.8))
+history=kmodel.fit(x_train,y_train,epochs=int(5),
+                   batch_size=int(16),verbose=int(2),
+                   validation_data=(x_valid,y_valid),
+                   callbacks=[checkpointer,
+                              early_stopping,
+                              lr_reduction])
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+history_plot(history)
+del history
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+kmodel.load_weights(fw)
+kmodel.evaluate(x_test,y_test)
+y_test_predict=np.argmax(kmodel.predict(x_test),axis=-1)
+os.remove(fw)
+</script></div><br/>
+    <h2>✒️ &nbsp; Step 4. PyTorch</h2>
+<div class="linked"><script type="text/x-sage">
+for param in tmodel.parameters():
+    param.requires_grad=False
+tmodel.classifier[3].requires_grad=True
+print('\n\n',tmodel)
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+def model_acc(model,data_loader):
+    correct_preds,num_examples=int(0),int(0)
+    for features,targets in data_loader:
+        features=features.to(dev)
+        targets=targets.to(dev).long()
+        logits=model(features)
+        _,pred_labels=torch.max(logits,int(1))
+        num_examples+=targets.size(int(0))
+        correct_preds+=(pred_labels==targets).sum()        
+    return correct_preds.float()/num_examples*int(100)
+def epoch_loss(model,data_loader):
+    model.eval()
+    curr_loss,num_examples=float(0.),int(0)
+    with torch.no_grad():
+        for features,targets in data_loader:
+            features=features.to(dev)
+            targets=targets.to(dev).long()
+            logits=model(features)
+            loss=tnnf.cross_entropy(logits,targets,
+                                    reduction='sum')
+            num_examples+=targets.size(int(0))
+            curr_loss+=loss
+        return curr_loss/num_examples
+</script></div><br/>      
+<div class="linked"><script type="text/x-sage">
+@register_line_magic
+def train_run(epochs):
+    epochs=int(epochs)
+    for epoch in range(epochs):
+        tmodel.train()
+        for batch_ids,(features,targets) \
+        in enumerate(dataloaders['train']):        
+            features=features.to(dev)
+            targets=targets.to(dev).long()
+            logits=tmodel(features)
+            cost=tnnf.cross_entropy(logits,targets)
+            optimizer.zero_grad(); cost.backward()
+            optimizer.step()
+            if not batch_ids%10:
+                print ('Epoch: %03d/%03d | Batch: %03d/%03d | Cost: %.4f' 
+                       %(epoch+1,epochs,batch_ids,
+                         len(dataloaders['train']),cost))
+        tmodel.eval()
+        with torch.set_grad_enabled(False):
+            print('Epoch: %03d/%03d'%(epoch+1,epochs))
+            print('Valid acc/loss: %.2f%%/%.2f'%\
+                  (model_acc(tmodel,dataloaders['valid']),
+                   epoch_loss(tmodel,dataloaders['valid'])))
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+num_classes=int(10)
+tmodel.classifier[6]=tnn.Sequential(
+    tnn.Linear(int(4096),int(256)),tnn.ReLU(),
+    tnn.Dropout(float(.5)),tnn.Linear(int(256),num_classes))
+tmodel=tmodel.to(dev)
+optimizer=torch.optim.Adam(tmodel.parameters())
+%train_run 1
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">
+tmodel.eval()
+with torch.set_grad_enabled(False):
+    print('test acc: %.2f%%'\
+          %model_acc(tmodel,dataloaders['test']))
+</script></div><br/>
+    <h2>✒️ &nbsp; Step 5. Models' Predictions</h2>
+<div class="linked"><script type="text/x-sage">
+fig=pl.figure(figsize=(10,4))
+randch=np.random.choice(x_test.shape[0],
+                        size=6,replace=False)
+for i,idx in enumerate(randch):
+    ax=fig.add_subplot(2,3,i+1,xticks=[],yticks=[])
+    ax.imshow(np.squeeze(x_test[idx]))
+    pred_idx=y_test_predict[idx]
+    true_idx=y_test[idx]
+    ax.set_title("{} ({})".format(names[pred_idx],
+                                  names[true_idx]),
+                 color=("#aa33ff" if pred_idx==true_idx 
+                        else "darkred"))
+pl.show()
+</script></div><br/>
+<div class="linked"><script type="text/x-sage">      
+def show_image(img):
+    npimg=img.numpy(); tr=(1,2,0)
+    pl.figure(figsize=(10,2))
+    pl.imshow(np.transpose(npimg,tr))
+    pl.xticks([]); pl.show()
+with torch.no_grad():
+    for i,(images,labels) in enumerate(dataloaders['test']):
+        show_image(utils.make_grid(images[:3]))
+        print('\ntrue labels: ',
+              ''.join('%20s'%names[labels[j]] 
+                       for j in range(3)))
+        images=images.to(dev)
+        labels=labels.to(dev)
+        outputs=tmodel(images)
+        _,preds=torch.max(outputs,int(1))
+        print('\npredictions: ',
+             ''.join('%20s'%names[preds[j]]
+                      for j in range(3)))
+        if i==1: break
+</script></div><br/>
+  </body>
+</html>
