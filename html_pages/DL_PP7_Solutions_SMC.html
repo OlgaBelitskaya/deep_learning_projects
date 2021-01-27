@@ -140,7 +140,7 @@ class TData(tds):
         return img,lbl
     def __len__(self):
         return self.y.shape[0]
-batch_size2=int(8); img_size2=int(64)
+batch_size2=int(8)
 n_train=batch_size2*(x_train.shape[0]//batch_size2)
 x_train2=np.transpose(x_train,(0,3,1,2))[:n_train]
 print(x_train2.mean(),x_train2.std())
@@ -261,8 +261,7 @@ def epoch_loss(model,data_loader):
             features=features.to(dev)
             targets=targets.to(dev).long()
             logits=model(features)
-            loss=tnnf.cross_entropy(logits,targets,
-                                    reduction='sum')
+            loss=tnnf.cross_entropy(logits,targets,reduction='sum')
             num_examples+=targets.size(int(0))
             curr_loss+=loss
         return curr_loss/num_examples
@@ -293,7 +292,7 @@ def train_run(epochs):
                    epoch_loss(tmodel,dataloaders['valid'])))
 </script></div><br/>
 <div class='linked'><script type='text/x-sage'>
-num_classes=int(10)
+num_classes=int(7)
 tmodel.classifier[6]=tnn.Sequential(
     tnn.Linear(int(4096),int(256)),tnn.ReLU(),
     tnn.Dropout(float(.5)),tnn.Linear(int(256),num_classes))
